@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db.models import (ImageField, CharField, Model,
-                              IntegerField, DateTimeField)
+                              IntegerField, DateTimeField, ForeignKey, CASCADE)
 
 
 class User(AbstractUser):
@@ -23,6 +23,6 @@ class User(AbstractUser):
 class PhoneCode(Model):
     """ Модель для кода подтверждения пользователя """
 
-    user_id = IntegerField(null=True)
+    user_id = ForeignKey(User, on_delete=CASCADE)
     query_time = DateTimeField(auto_now_add=True)
     code = IntegerField(null=True)
