@@ -1,20 +1,14 @@
 from random import randint
 
 from django.utils import timezone
-from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 
-from personal_account.smsc_api import SMSC
 from personal_account.models import User, PhoneCode
 from personal_account.serializers import UserSerializer
-
-
-def default(request):
-    return HttpResponse("Default")
 
 
 class Registration(APIView):
@@ -22,8 +16,6 @@ class Registration(APIView):
     @staticmethod
     def post(request):
         phone = str(request.data["phone"])
-        # if re.match(r"(\+7)|8|7\d{10}", phone):
-        # sms = SMSC()
         random_code = str(randint(100000, 999999))
         try:
             u = User.objects.get(phone_number=phone[-10::])
@@ -34,11 +26,6 @@ class Registration(APIView):
             u.save()
         c = PhoneCode(user_id=u.id, code=random_code)
         c.save()
-        print(random_code)
-        # sms.send_sms("7"+phone,
-        #              f"Ваш кот еще спит: {random_code}",
-        #              sender="sms")
-
         return Response({"message": random_code})
 
     @staticmethod
@@ -81,12 +68,9 @@ class Confirmation(APIView):
             content = {"message": "User is active", "token": token.key}
         return Response(content)
 
-    @staticmethod
-    def get(request):
-        return Response({"message": "No GET for this url"}, status=405)
-
 
 class Logout(APIView):
+
     permission_classes = (IsAuthenticated,)
 
     @staticmethod

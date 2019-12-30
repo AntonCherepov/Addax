@@ -1,4 +1,3 @@
-from django.forms import CharField
 from rest_framework import serializers
 
 from personal_account.models import User

@@ -21,6 +21,7 @@ class User(AbstractUser):
 
 
 class PhoneCode(Model):
+    """ Модель для кода подтверждения пользователя """
 
     user_id = IntegerField(null=True)
     query_time = DateTimeField(auto_now_add=True)
