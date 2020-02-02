@@ -11,5 +11,6 @@ class UserSerializer(serializers.ModelSerializer):
             "id",
             "phone_number",
             "is_staff",
-            "is_superuser"
+            "is_superuser",
+            "is_active",
         )

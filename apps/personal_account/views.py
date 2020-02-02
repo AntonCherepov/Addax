@@ -1,13 +1,17 @@
 from random import randint
 
-from django.utils import timezone
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+
 from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 
-from personal_account.models import User, PhoneCode
+from personal_account.models import (User, PhoneCode, get_token,
+                                     UserType, MasterAccount, get_user,
+                                     ClientAccount)
+from personal_account.forms import RegistrationForm, ConfirmationForm
 from personal_account.serializers import UserSerializer
 
 
@@ -15,58 +19,62 @@ class Registration(APIView):
 
     @staticmethod
     def post(request):
-        phone = str(request.data["phone"])
+        registration_form = RegistrationForm(request.POST)
         random_code = str(randint(100000, 999999))
-        try:
-            u = User.objects.get(phone_number=phone[-10::])
-        except ObjectDoesNotExist:
-            u = User(phone_number=phone[-10::],
-                     username=random_code + "U",
-                     is_active=False)
-            u.save()
-        c = PhoneCode(user_id=u.id, code=random_code)
-        c.save()
-        return Response({"message": random_code})
-
-    @staticmethod
-    def get(request):
-        active_users = User.objects.filter(is_active=True)
-        inactive_users = User.objects.filter(is_active=False)
-        serializer_active = UserSerializer(active_users, many=True)
-        serializer_inactive = UserSerializer(inactive_users, many=True)
-        return Response({"message":
-                        {"active_users": serializer_active.data,
-                         "inactive_users": serializer_inactive.data}
-                         })
+        if registration_form.is_valid():
+            phone_number = registration_form.cleaned_data["phone"]
+            type_code = registration_form.cleaned_data["type_code"]
+            try:
+                user = User(phone_number=phone_number, is_active=False,
+                            username=phone_number)
+                user.reg_check(type_code)
+                user.type_code = UserType.objects.get(code=type_code)
+                user.save()
+            except ValidationError as e:
+                if str(e) == "['User with this phone_number already exists']":
+                    user = User.objects.get(phone_number=phone_number)
+                else:
+                    return Response({"error": str(e)[2:-2:]},
+                                    status=HTTP_400_BAD_REQUEST)
+            c = PhoneCode(user=user, code=random_code)
+            c.save()
+            return Response(status=HTTP_200_OK)
+        else:
+            return Response({"is not valid": ""},
+                            status=HTTP_400_BAD_REQUEST)
 
 
 class Confirmation(APIView):
 
     @staticmethod
     def post(request):
-        phone = str(request.data["phone"])
-        code = str(request.data["code"])
-        try:
-            u = User.objects.get(phone_number=phone[-10::])
-            confirm_code = PhoneCode.objects.filter(user_id=u.id) \
-                                            .order_by("-id")[:1:][0]
-        except ObjectDoesNotExist:
-            return Response({"message": "No User or Code"})
-
-        time_difference = timezone.now() - confirm_code.query_time
-        if int(code) != confirm_code.code:
-            content = {"message": "Incorrect code"}
-        elif time_difference.seconds > 300:
-            content = {"message": "Code is too old"}
-        else:
-            u.is_active = True
-            u.save()
+        confirmation_form = ConfirmationForm(request.POST)
+        if confirmation_form.is_valid():
+            phone_number = confirmation_form.cleaned_data["phone"]
+            code = confirmation_form.cleaned_data["code"]
             try:
-                token = Token.objects.get(user=u)
-            except ObjectDoesNotExist:
-                token = Token.objects.create(user=u)
-            content = {"message": "User is active", "token": token.key}
-        return Response(content)
+                # Странная реализация, надо переписать
+                user = User(phone_number=phone_number)
+                user = user.confirm_check()
+                PhoneCode(user=user, code=code).check_()
+                if user.type_code.code == "m":
+                    MasterAccount(user=user).create_account()
+                elif user.type_code.code == "c":
+                    ClientAccount(user=user).create_account()
+                try:
+                    token = Token.objects.get(user=user)
+                except ObjectDoesNotExist:
+                    token = Token.objects.create(user=user)
+                user.activate()
+                content = {"token": token.key}
+                # Авторизация с 2-ух устройств
+                return Response(content, status=HTTP_200_OK)
+
+            except ValidationError as e:
+                return Response({"error": str(e)[2:-2:]},
+                                status=HTTP_400_BAD_REQUEST)
+        else:
+            return Response(status=HTTP_400_BAD_REQUEST)
 
 
 class Logout(APIView):
@@ -75,18 +83,79 @@ class Logout(APIView):
 
     @staticmethod
     def post(request):
-        try:
-            auth_header = request.META["HTTP_AUTHORIZATION"].split(" ")
-            token_raw = auth_header[1]
-            t = Token.objects.get(key=token_raw)
-            t.delete()
-            content = {"message":
-                       f"Logout success for user id = {t.user_id}"}
-        except ObjectDoesNotExist:
-            content = {"message": "No login"}
-        return Response(content)
+        token = get_token(request)
+        print(type(token))
+        if isinstance(token, dict):
+            return Response(token)
+        token.delete()
+        return Response(status=HTTP_200_OK)
+
+
+class IsValidToken(APIView):
+    permission_classes = (IsAuthenticated,)
 
     @staticmethod
     def get(request):
-        content = {"message": "User is authorized"}
+        u = get_user(request)
+        serialized_user = UserSerializer(u)
+        content = {"message": "User is authorized", "user": serialized_user.data}
+        return Response(content)
+
+
+class Masters(APIView):
+
+    @staticmethod
+    def get(request, master_id):
+        content = {"id": master_id,
+                   "name": "Салон",
+                   "address": "Вильгельма пика 4",
+                   "about_myself": "Нет описания",
+                   "master_types": ["Парикмахер", "Педикюр", "Маникюр"],
+                   "status": "active",
+                   "creation_date": 5231,
+                   "modified_date": 5232,
+                   "status_code": "s",
+                   "gallery_last": master_id,
+                   "gallery_size": 2,
+                   "gallery_all": 15,
+                   "workplace_last": master_id,
+                   "workplace_size": 2,
+                   "workplace_all": 7,
+                   "avatar": ["/media/avatar.jpg", "/media/avatar_small.jpg"],
+                   "gallery": [["/media/lol.jpg", "/media/lol_small.jpg"],
+                               ["/media/abc.jpg", "/media/abc_small.jpg"]
+                               ],
+                   "workplace": [["/media/lol.jpg", "/media/lol_small.jpg"],
+                                 ["/media/abc.jpg", "/media/abc_small.jpg"]
+                               ]
+                   }
+        return Response(content, status=HTTP_200_OK)
+
+    @staticmethod
+    def patch(request, master_id):
+        content = {"id": master_id,
+                   "name": "Салон",
+                   "phone": 9101231232,
+                   "address": "Вильгельма пика 4",
+                   "about_myself": "Нет описания",
+                   "master_types": ["Парикмахер", "Педикюр", "Маникюр"],
+                   "status": "active",
+                   "avatar": ["/media/avatar.jpg", "/media/avatar_small.jpg"],
+                   "gallery": [["/media/lol.jpg", "/media/lol_small.jpg"],
+                               ["/media/abc.jpg", "/media/abc_small.jpg"]
+                               ]
+                   }
+        return Response(content, status=HTTP_200_OK)
+
+
+class Clients(APIView):
+
+    permission_classes = (IsAuthenticated,)
+
+    @staticmethod
+    def get(request, client_id):
+        u = get_user(request)
+        serialized_user = UserSerializer(u)
+        content = {"message": "User is authorized",
+                   "user": serialized_user.data}
         return Response(content)

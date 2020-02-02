@@ -1,6 +1,7 @@
 import os
 import sys
 
+# чекнуть
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
@@ -23,12 +24,18 @@ INSTALLED_APPS = [
 
     'performer_account.apps.PerformerAccountConfig',
     'personal_account.apps.PersonalAccountConfig',
+    'order.apps.WorkRequestConfig',
+    'manuals.apps.ManualsConfig',
+    'photos.apps.PhotosConfig',
 
 ]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+       'rest_framework.permissions.AllowAny',
     ],
 }
 
@@ -102,4 +109,5 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# MEDIA_DIR = None
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
