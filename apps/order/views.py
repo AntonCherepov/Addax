@@ -83,7 +83,7 @@ class Replies(APIView):
                    "comment": "AAA",
                    "cost": 7500,
                    "creationDate": 123122,
-                   "reply_status": "Рассматривается!", # Возможно лучше status
+                   "status": "Рассматривается!",
                    "master_id": 123}
         return Response(content, status=HTTP_200_OK)
 

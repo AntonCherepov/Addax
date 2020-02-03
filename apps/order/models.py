@@ -10,7 +10,7 @@ from photos.models import Photo
 class Order(Model):
 
     user = ForeignKey(User, on_delete=CASCADE)
-    performer_type = ForeignKey(MasterType, on_delete=SET_NULL, null=True)
+    master_type = ForeignKey(MasterType, on_delete=SET_NULL, null=True)
     city = ForeignKey(City, on_delete=SET_NULL, null=True)
     status_code = ForeignKey(OrderStatus, on_delete=SET_NULL, null=True)
     date_created = DateTimeField(auto_now_add=True)
@@ -33,4 +33,4 @@ class Reply(Model):
     comment = CharField(max_length=1000)
     date_created = DateTimeField(auto_now_add=True)
     date_modified = DateTimeField(auto_now=True)
-    reply_status = ForeignKey(ReplyStatus, on_delete=SET_NULL, null=True)
+    status = ForeignKey(ReplyStatus, on_delete=SET_NULL, null=True)
