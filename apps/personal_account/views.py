@@ -40,8 +40,7 @@ class Registration(APIView):
             c.save()
             return Response(status=HTTP_200_OK)
         else:
-            return Response({"is not valid": ""},
-                            status=HTTP_400_BAD_REQUEST)
+            return Response(status=HTTP_400_BAD_REQUEST)
 
 
 class Confirmation(APIView):
@@ -71,8 +70,7 @@ class Confirmation(APIView):
                 return Response(content, status=HTTP_200_OK)
 
             except ValidationError as e:
-                return Response({"error": str(e)[2:-2:]},
-                                status=HTTP_400_BAD_REQUEST)
+                return Response(status=HTTP_400_BAD_REQUEST)
         else:
             return Response(status=HTTP_400_BAD_REQUEST)
 
