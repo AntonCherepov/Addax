@@ -35,7 +35,6 @@ def get_user(request):
     return u
 
 
-# AbstractUser оставил из-за токена
 class User(AbstractUser):
     """ Модель для пользователей """
 
@@ -48,7 +47,7 @@ class User(AbstractUser):
     def __str__(self):
         return self.phone_number
 
-    def reg_check(self, type_code=None):
+    def reg_validation(self, type_code=None):
         try:
             int(str(self.phone_number))
         except ValueError:
@@ -61,7 +60,7 @@ class User(AbstractUser):
             if not UserType.objects.filter(code=type_code).exists():
                 raise ValidationError('Incorrect type_code')
 
-    def confirm_check(self):
+    def confirm_validation(self):
         users = User.objects.filter(phone_number=self.phone_number)
         if users.count() > 1:
             raise ValidationError('Too many users')

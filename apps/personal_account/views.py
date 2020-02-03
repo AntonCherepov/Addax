@@ -27,7 +27,7 @@ class Registration(APIView):
             try:
                 user = User(phone_number=phone_number, is_active=False,
                             username=phone_number)
-                user.reg_check(type_code)
+                user.reg_validation(type_code)
                 user.type_code = UserType.objects.get(code=type_code)
                 user.save()
             except ValidationError as e:
@@ -55,7 +55,7 @@ class Confirmation(APIView):
             try:
                 # Странная реализация, надо переписать
                 user = User(phone_number=phone_number)
-                user = user.confirm_check()
+                user = user.confirm_validation()
                 PhoneCode(user=user, code=code).check_()
                 if user.type_code.code == "m":
                     MasterAccount(user=user).create_account()
@@ -92,6 +92,7 @@ class Logout(APIView):
 
 
 class IsValidToken(APIView):
+
     permission_classes = (IsAuthenticated,)
 
     @staticmethod
