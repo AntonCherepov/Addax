@@ -114,6 +114,8 @@ class MasterAccount(Model):
     address = CharField(max_length=250)
 
     def create_account(self):
+        if ClientAccount.objects.filter(user=self.user).exists():
+            return False
         if not MasterAccount.objects.filter(user=self.user).exists():
             try:
                 status_code = MasterStatus.objects.get(code="uv")
@@ -129,6 +131,8 @@ class ClientAccount(Model):
     user = OneToOneField(User, on_delete=CASCADE)
 
     def create_account(self):
+        if MasterAccount.objects.filter(user=self.user).exists():
+            return False
         if not ClientAccount.objects.filter(user=self.user).exists():
             p = ClientAccount(user=self.user)
             p.save()
