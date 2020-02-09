@@ -23,6 +23,6 @@ class MasterType(APIView):
     @staticmethod
     def get(request):
         masters_types = MasterType.objects.all()
-        serialized_cities = MasterTypeSerializer(masters_types, many=True)
-        return Response({"masters_types": serialized_cities.data},
+        serialized_masters = MasterTypeSerializer(masters_types, many=True)
+        return Response({"masters_types": serialized_masters.data},
                         status=HTTP_200_OK)
