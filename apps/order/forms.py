@@ -1,9 +1,13 @@
-from django import forms
+from time import time
 
-from order.models import OrderPhoto
+from django.forms import CharField, IntegerField, Form
 
 
-class DocumentForm(forms.ModelForm):
-    class Meta:
-        model = OrderPhoto
-        fields = ('description', 'image', )
+class OrderForm(Form):
+    description = CharField(max_length=1000)
+    city = IntegerField()
+    request_date_to = IntegerField(min_value=int(time()),
+                                   max_value=99999999999)
+    request_date_from = IntegerField(min_value=int(time()),
+                                     max_value=99999999999)
+    master_type = IntegerField()
