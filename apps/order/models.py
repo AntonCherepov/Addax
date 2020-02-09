@@ -2,14 +2,12 @@ from django.db.models import (Model, CharField, DateTimeField, IntegerField,
                               ForeignKey, ManyToManyField, CASCADE, SET_NULL,)
 
 from manuals.models import City, OrderStatus, ReplyStatus
-from personal_account.models import User, MasterType, ClientAccount, \
-    MasterAccount
+from personal_account.models import MasterType, ClientAccount, MasterAccount
 from photos.models import Photo
 
 
 class Order(Model):
 
-    user = ForeignKey(User, on_delete=CASCADE)
     master_type = ForeignKey(MasterType, on_delete=SET_NULL, null=True)
     city = ForeignKey(City, on_delete=SET_NULL, null=True)
     status_code = ForeignKey(OrderStatus, on_delete=SET_NULL, null=True)
@@ -17,7 +15,7 @@ class Order(Model):
     date_modified = DateTimeField(auto_now=True)
     request_date_from = DateTimeField()
     request_date_to = DateTimeField()
-    selection_date = DateTimeField()
+    selection_date = DateTimeField(null=True)
     description = CharField(max_length=1000)
     photo = ManyToManyField(Photo)
     client = ForeignKey(ClientAccount, on_delete=CASCADE)
