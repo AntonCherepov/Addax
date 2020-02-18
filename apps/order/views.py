@@ -1,6 +1,9 @@
-from django.utils.datetime_safe import datetime
+from django.db import IntegrityError
+from django.utils.datetime_safe import datetime as dt
+from django.db.models import Q
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from rest_framework.status import (HTTP_200_OK, HTTP_400_BAD_REQUEST,
+                                   HTTP_201_CREATED,)
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
@@ -25,11 +28,12 @@ class OrderView(APIView):
         # order_form = OrderForm(request.POST)
         # if order_form.is_valid():
         city = City.objects.get(id=int(request.POST.get('city')))
-        master_type = MasterType.objects.get(id=request.POST.get('master_type'))
+        master_type = MasterType.objects.get(
+            id=request.POST.get('master_type'))
         status_code = OrderStatus.objects.get(code="sm")
-        date_from = datetime.utcfromtimestamp(
+        date_from = dt.utcfromtimestamp(
             int(request.POST.get('request_date_from')))
-        date_to = datetime.utcfromtimestamp(
+        date_to = dt.utcfromtimestamp(
             int(request.POST.get('request_date_to')))
         request_date_from = date_from
         request_date_to = date_to
@@ -43,32 +47,57 @@ class OrderView(APIView):
                 status_code=status_code,
                 description=description,)
         order.save()
-        # Что делать с одинаковыми названиями файлов?
-        # (Хотя джанго это вроде учитывает)
 
         for key, file in request.FILES.items():
             photo = Photo(user=user, image=file)
             photo.save()
             order.photo.add(photo)
-        return Response(status=HTTP_200_OK)
+        return Response(status=HTTP_201_CREATED)
 
     @staticmethod
     def get(request):
         user = get_user(request)
         if isinstance(user, dict):
             return Response(user)
+
+        last_updates = request.GET.get("last_updates")
+        order_status = request.GET.get("order_status")
+        limit = request.GET.get("limit")
+        offset = request.GET.get("offset")
         if (MasterAccount.objects.filter(user=user).exists() and
                 not ClientAccount.objects.filter(user=user).exists()):
-            status_code = OrderStatus.objects.get(code="sm")
-            orders = Order.objects.filter(status_code=status_code)
+            master = MasterAccount.objects.get(user=user)
+            orders = Order.objects.filter(
+                Q(status_code="sm") | Q(reply__master=master)
+            )
+
         elif (ClientAccount.objects.filter(user=user).exists() and
                 not MasterAccount.objects.filter(user=user).exists()):
             client = ClientAccount.objects.get(user=user)
             orders = Order.objects.filter(client=client)
         else:
             return Response(status=HTTP_400_BAD_REQUEST)
+        try:
+            if order_status:
+                orders = orders.filter(status_code=order_status)
+            if last_updates:
+                update = dt.utcfromtimestamp(int(last_updates))
+                orders = orders.filter(date_modified__gt=update)
+            if offset:
+                orders = orders[int(offset)::]
+            if limit:
+                orders = orders[:int(limit):]
+        except (ValueError, OSError):
+            return Response(status=HTTP_400_BAD_REQUEST)
+        except AssertionError as e:
+            if str(e) == "Negative indexing is not supported.":
+                return Response(status=HTTP_400_BAD_REQUEST)
+
         orders = OrderSerializer(orders, many=True)
-        return Response({"orders": orders.data}, status=HTTP_200_OK)
+        try:
+            return Response({"orders": orders.data}, status=HTTP_200_OK)
+        except IntegrityError:
+            return Response(status=HTTP_400_BAD_REQUEST)
 
 
 class OrderById(APIView):
