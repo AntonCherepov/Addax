@@ -5,7 +5,7 @@ from personal_account.models import User, PhoneCode
 
 class UserAdmin(ModelAdmin):
 
-    list_display = ("id", "phone_number", "is_active", "date_joined")
+    list_display = ("id", "phone_number", "date_joined")
 
 
 class PhoneCodeAdmin(ModelAdmin):

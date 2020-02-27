@@ -1,8 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.db.models import (ImageField, CharField, Model,
-                              IntegerField, DateTimeField, ForeignKey, CASCADE,
+from django.db.models import (CharField, Model, CASCADE,
+                              IntegerField, DateTimeField, ForeignKey,
                               OneToOneField, SET_NULL, ManyToManyField,)
 
 from rest_framework.authtoken.models import Token
@@ -39,7 +39,6 @@ class User(AbstractUser):
     """ Модель для пользователей """
 
     phone_number = CharField('Номер', null=True, max_length=10, unique=True)
-    image = ImageField('Аватар', upload_to='UserAvatars', null=True)
     type_code = ForeignKey(UserType, on_delete=SET_NULL, null=True)
     status_code = ForeignKey(UserStatus, on_delete=SET_NULL, null=True)
     date_modified = DateTimeField(auto_now=True)
@@ -69,10 +68,6 @@ class User(AbstractUser):
                                   'exists')
         else:
             return users[0]
-
-    def activate(self):
-        self.is_active = True
-        self.save()
 
     class Meta:
         verbose_name_plural = 'Пользователи'

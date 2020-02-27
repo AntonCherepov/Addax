@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 
+from config.settings import personal_account_log as log
 from personal_account.models import (User, PhoneCode, get_token,
                                      UserType, MasterAccount, get_user,
                                      ClientAccount)
@@ -25,8 +26,7 @@ class Registration(APIView):
             phone_number = registration_form.cleaned_data["phone"]
             type_code = registration_form.cleaned_data["type_code"]
             try:
-                user = User(phone_number=phone_number, is_active=False,
-                            username=phone_number)
+                user = User(phone_number=phone_number, username=phone_number)
                 user.reg_validation(type_code)
                 user.type_code = UserType.objects.get(code=type_code)
                 user.save()
@@ -64,7 +64,6 @@ class Confirmation(APIView):
                     token = Token.objects.get(user=user)
                 except ObjectDoesNotExist:
                     token = Token.objects.create(user=user)
-                user.activate()
                 content = {"token": token.key}
                 # Авторизация с 2-ух устройств
                 return Response(content, status=HTTP_200_OK)
