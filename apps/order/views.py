@@ -7,16 +7,16 @@ from rest_framework.status import (HTTP_200_OK, HTTP_400_BAD_REQUEST,
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
-# from personal_account.custom_permissions import IsActivePermission
 from manuals.models import MasterType, City
 from order.serializers import OrderSerializer
+from personal_account.custom_permissions import IsConfirmed
 from personal_account.models import get_user, ClientAccount, MasterAccount
 from order.models import Order, OrderStatus
 from photos.models import Photo
 
 
 class OrderView(APIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsConfirmed)
 
     @staticmethod
     def post(request):

@@ -31,8 +31,10 @@ def user_by_token(token):
 
 def get_user(request):
     t = get_token(request)
-    u = user_by_token(t)
-    return u
+    if isinstance(t, Token):
+        u = user_by_token(t)
+        return u
+    return
 
 
 class User(AbstractUser):
@@ -46,6 +48,14 @@ class User(AbstractUser):
     def __str__(self):
         return self.phone_number
 
+    def is_banned(self):
+        banned_status = UserStatus.objects.get(code="bn")
+        return True if self.status_code == banned_status else False
+
+    def is_confirmed(self):
+        confirmed_status = UserStatus.objects.get(code="cf")
+        return True if self.status_code == confirmed_status else False
+
     def reg_validation(self, type_code=None):
         try:
             int(str(self.phone_number))
@@ -53,8 +63,14 @@ class User(AbstractUser):
             raise ValidationError('phone_number is not a number')
         if str(self.phone_number)[0] != "9":
             raise ValidationError('Incorrect phone_number')
-        if User.objects.filter(phone_number=self.phone_number).exists():
-            raise ValidationError('User with this phone_number already exists')
+        try:
+            if user := User.objects.get(phone_number=self.phone_number):
+                if not user.is_banned():
+                    raise ValidationError('User with this phone_number '
+                                          'already exists')
+                raise ValidationError('User is banned')
+        except ObjectDoesNotExist:
+            pass
         if type_code is not None:
             if not UserType.objects.filter(code=type_code).exists():
                 raise ValidationError('Incorrect type_code')
@@ -63,11 +79,11 @@ class User(AbstractUser):
         users = User.objects.filter(phone_number=self.phone_number)
         if users.count() > 1:
             raise ValidationError('Too many users')
-        if not users.exists():
+        elif not users.exists():
             raise ValidationError('User with this phone_number does not '
                                   'exists')
-        else:
-            return users[0]
+        elif self.status_code != UserStatus.objects.get(code="rg"):
+            raise ValidationError("User does not need confirmation")
 
     class Meta:
         verbose_name_plural = 'Пользователи'

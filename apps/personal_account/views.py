@@ -8,7 +8,8 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 
-from config.settings import personal_account_log as log
+from manuals.models import UserStatus
+from personal_account.custom_permissions import IsConfirmed, IsNotBanned
 from personal_account.models import (User, PhoneCode, get_token,
                                      UserType, MasterAccount, get_user,
                                      ClientAccount)
@@ -17,6 +18,8 @@ from personal_account.serializers import UserSerializer
 
 
 class Registration(APIView):
+
+    permission_classes = (IsNotBanned,)
 
     @staticmethod
     def post(request):
@@ -29,6 +32,7 @@ class Registration(APIView):
                 user = User(phone_number=phone_number, username=phone_number)
                 user.reg_validation(type_code)
                 user.type_code = UserType.objects.get(code=type_code)
+                user.status_code = UserStatus.objects.get(code="rg")
                 user.save()
             except ValidationError as e:
                 if str(e) == "['User with this phone_number already exists']":
@@ -52,10 +56,11 @@ class Confirmation(APIView):
             phone_number = confirmation_form.cleaned_data["phone"]
             code = confirmation_form.cleaned_data["code"]
             try:
-                # Странная реализация, надо переписать
-                user = User(phone_number=phone_number)
-                user = user.confirm_validation()
+                user = User.objects.get(phone_number=phone_number)
+                user.confirm_validation()
                 PhoneCode(user=user, code=code).check_()
+                user.status_code = UserStatus.objects.get(code="cf")
+                user.save()
                 if user.type_code.code == "m":
                     MasterAccount(user=user).create_account()
                 elif user.type_code.code == "c":
@@ -76,7 +81,7 @@ class Confirmation(APIView):
 
 class Logout(APIView):
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsConfirmed)
 
     @staticmethod
     def post(request):
@@ -90,7 +95,7 @@ class Logout(APIView):
 
 class IsValidToken(APIView):
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsConfirmed)
 
     @staticmethod
     def get(request):
