@@ -31,7 +31,7 @@ class MasterStatusAdmin(ModelAdmin):
 
 class CityAdmin(ModelAdmin):
 
-    list_display = ("id", "name", "description")
+    list_display = ("id", "name")
 
 
 site.register(MasterType, MasterTypeAdmin)

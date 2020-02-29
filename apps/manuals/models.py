@@ -4,7 +4,6 @@ from django.db.models import Model, CharField, ForeignKey, SET_NULL
 class City(Model):
 
     name = CharField(max_length=200)
-    description = CharField(max_length=200)
 
 
 class MasterType(Model):
