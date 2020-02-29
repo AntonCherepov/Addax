@@ -101,7 +101,7 @@ class IsValidToken(APIView):
     def get(request):
         u = get_user(request)
         serialized_user = UserSerializer(u)
-        content = {"message": "User is authorized", "user": serialized_user.data}
+        content = {"user": serialized_user.data}
         return Response(content)
 
 

@@ -7,10 +7,4 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = (
-            "id",
-            "phone_number",
-            "is_staff",
-            "is_superuser",
-            "is_active",
-        )
+        fields = ("type_code", "status_code")
