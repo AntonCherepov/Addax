@@ -38,8 +38,7 @@ class Registration(APIView):
                 if str(e) == "['User with this phone_number already exists']":
                     user = User.objects.get(phone_number=phone_number)
                 else:
-                    return Response({"error": str(e)[2:-2:]},
-                                    status=HTTP_400_BAD_REQUEST)
+                    return Response(status=HTTP_400_BAD_REQUEST)
             c = PhoneCode(user=user, code=random_code)
             c.save()
             return Response(status=HTTP_200_OK)
