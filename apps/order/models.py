@@ -16,7 +16,7 @@ class Order(Model):
     request_date_from = DateTimeField()
     request_date_to = DateTimeField()
     selection_date = DateTimeField(null=True)
-    description = CharField(max_length=1000)
+    description = CharField(max_length=1000, null=True)
     photo = ManyToManyField(Photo)
     client = ForeignKey(ClientAccount, on_delete=CASCADE)
 

@@ -1,13 +1,16 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.utils.datetime_safe import datetime as dt
 from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.status import (HTTP_200_OK, HTTP_400_BAD_REQUEST,
-                                   HTTP_201_CREATED,)
+                                   HTTP_201_CREATED, HTTP_403_FORBIDDEN)
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
+from config.constants import IMAGE_EXTENSIONS
 from manuals.models import MasterType, City
+from order.forms import OrderForm
 from order.serializers import OrderSerializer
 from personal_account.custom_permissions import IsConfirmed
 from personal_account.models import get_user, ClientAccount, MasterAccount
@@ -22,37 +25,44 @@ class OrderView(APIView):
     def post(request):
         user = get_user(request)
         if isinstance(user, dict):
-            return Response(user)
-
-        client = ClientAccount.objects.get(user=user)
-        # order_form = OrderForm(request.POST)
-        # if order_form.is_valid():
-        city = City.objects.get(id=int(request.POST.get('city')))
-        master_type = MasterType.objects.get(
-            id=request.POST.get('master_type'))
-        status_code = OrderStatus.objects.get(code="sm")
-        date_from = dt.utcfromtimestamp(
-            int(request.POST.get('request_date_from')))
-        date_to = dt.utcfromtimestamp(
-            int(request.POST.get('request_date_to')))
-        request_date_from = date_from
-        request_date_to = date_to
-        description = request.POST.get('description')
-        order = Order(
+            return Response(status=HTTP_400_BAD_REQUEST)
+        try:
+            client = ClientAccount.objects.get(user=user)
+        except ObjectDoesNotExist:
+            return Response(status=HTTP_403_FORBIDDEN)
+        order_form = OrderForm(request.POST)
+        if order_form.is_valid():
+            city = City.objects.get(id=request.POST.get('city_id'))
+            master_type_code = MasterType.objects.get(
+                id=request.POST.get('master_type_code'))
+            status_code = OrderStatus.objects.get(code="sm")
+            request_date_from = dt.utcfromtimestamp(
+                int(request.POST.get('request_date_from')))
+            request_date_to = dt.utcfromtimestamp(
+                int(request.POST.get('request_date_to')))
+            description = request.POST.get('description')
+            order = Order(
                 client=client,
                 city=city,
-                master_type=master_type,
+                master_type=master_type_code,
                 request_date_from=request_date_from,
                 request_date_to=request_date_to,
                 status_code=status_code,
-                description=description,)
-        order.save()
-
-        for key, file in request.FILES.items():
-            photo = Photo(user=user, image=file)
-            photo.save()
-            order.photo.add(photo)
-        return Response(status=HTTP_201_CREATED)
+                description=description, )
+            order.save()
+            files = request.FILES
+            image_keys = list(filter(
+                lambda k: str(files[k]).endswith(IMAGE_EXTENSIONS),
+                files.keys()
+            )
+            )
+            for key in image_keys[:5:]:
+                photo = Photo(user=user, image=files[key])
+                photo.save()
+                order.photo.add(photo)
+            return Response(status=HTTP_201_CREATED)
+        else:
+            return Response(status=HTTP_400_BAD_REQUEST)
 
     @staticmethod
     def get(request):
@@ -72,7 +82,7 @@ class OrderView(APIView):
             )
 
         elif (ClientAccount.objects.filter(user=user).exists() and
-                not MasterAccount.objects.filter(user=user).exists()):
+              not MasterAccount.objects.filter(user=user).exists()):
             client = ClientAccount.objects.get(user=user)
             orders = Order.objects.filter(client=client)
         else:
@@ -110,7 +120,8 @@ class OrderById(APIView):
     @staticmethod
     def get(request, order_id):
         # ToDo
-        content = {"id": order_id, "town": "Москва", "masterType": "Парикмахер",
+        content = {"id": order_id, "town": "Москва",
+                   "masterType": "Парикмахер",
                    "status": "active", "creationDate": 1579077441,
                    "requestDateFrom": 1579077452, "requestDateTo": 1579077453,
                    "description": "", "selectionDate": 1579077453,

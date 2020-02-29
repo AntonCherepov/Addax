@@ -2,12 +2,11 @@ from time import time
 
 from django.forms import CharField, IntegerField, Form
 
+from manuals.models import MasterType, City
+
 
 class OrderForm(Form):
-    description = CharField(max_length=1000)
-    city = IntegerField()
-    request_date_to = IntegerField(min_value=int(time()),
-                                   max_value=99999999999)
-    request_date_from = IntegerField(min_value=int(time()),
-                                     max_value=99999999999)
-    master_type = IntegerField()
+    city_id = IntegerField(max_value=City.objects.count())
+    request_date_to = CharField(max_length=10, min_length=10)
+    request_date_from = CharField(max_length=10, min_length=10)
+    master_type_code = IntegerField(max_value=MasterType.objects.count())
