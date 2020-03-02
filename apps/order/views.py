@@ -60,7 +60,8 @@ class OrderView(APIView):
                 photo = Photo(user=user, image=files[key])
                 photo.save()
                 order.photo.add(photo)
-            return Response(status=HTTP_201_CREATED)
+            order = OrderSerializer(order)
+            return Response({"order": order.data}, status=HTTP_201_CREATED)
         else:
             return Response(status=HTTP_400_BAD_REQUEST)
 
