@@ -33,8 +33,8 @@ class OrderView(APIView):
         order_form = OrderForm(request.POST)
         if order_form.is_valid():
             city = City.objects.get(id=request.POST.get('city_id'))
-            master_type_code = MasterType.objects.get(
-                id=request.POST.get('master_type_code'))
+            master_type_id = MasterType.objects.get(
+                id=request.POST.get('master_type_id'))
             status_code = OrderStatus.objects.get(code="sm")
             request_date_from = dt.utcfromtimestamp(
                 int(request.POST.get('request_date_from')))
@@ -44,7 +44,7 @@ class OrderView(APIView):
             order = Order(
                 client=client,
                 city=city,
-                master_type=master_type_code,
+                master_type=master_type_id,
                 request_date_from=request_date_from,
                 request_date_to=request_date_to,
                 status_code=status_code,
