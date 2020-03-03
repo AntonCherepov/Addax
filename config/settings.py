@@ -24,7 +24,6 @@ INSTALLED_APPS = [
 
     'corsheaders',
 
-    'performer_account.apps.PerformerAccountConfig',
     'personal_account.apps.PersonalAccountConfig',
     'order.apps.WorkRequestConfig',
     'manuals.apps.ManualsConfig',
