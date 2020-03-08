@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 
-from order.models import Order
+from order.models import Order, Reply
 from photos.serializers import PhotoSerializer
 from manuals.serializers import CitySerializer, MasterTypeSerializer
 
@@ -13,3 +13,10 @@ class OrderSerializer(ModelSerializer):
     class Meta:
         model = Order
         exclude = ("photo",)
+
+
+class ReplySerializer(ModelSerializer):
+
+    class Meta:
+        model = Reply
+        fields = "__all__"

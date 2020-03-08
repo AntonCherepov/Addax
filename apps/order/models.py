@@ -40,7 +40,11 @@ class Reply(Model):
     suggested_time_from = DateTimeField()
     suggested_time_to = DateTimeField()
     cost = IntegerField()
-    comment = CharField(max_length=1000)
+    comment = CharField(max_length=1000, null=True)
     date_created = DateTimeField(auto_now_add=True)
     date_modified = DateTimeField(auto_now=True)
     status = ForeignKey(ReplyStatus, on_delete=SET_NULL, null=True)
+
+    def validation(self):
+        if Reply.objects.filter(master=self.master, order=self.order).exists():
+            raise ValidationError("Reply already exists.")

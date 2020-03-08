@@ -2,6 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.utils.datetime_safe import datetime as dt
 from django.db.models import Q
+from django.core.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.status import (HTTP_200_OK, HTTP_400_BAD_REQUEST,
                                    HTTP_201_CREATED, HTTP_403_FORBIDDEN)
@@ -9,12 +10,12 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
 from config.constants import IMAGE_EXTENSIONS
-from manuals.models import MasterType, City
-from order.forms import OrderForm
-from order.serializers import OrderSerializer
+from manuals.models import MasterType, City, ReplyStatus
+from order.forms import OrderForm, ReplyForm
+from order.serializers import OrderSerializer, ReplySerializer
 from personal_account.custom_permissions import IsConfirmed
 from personal_account.models import get_user, ClientAccount, MasterAccount
-from order.models import Order, OrderStatus
+from order.models import Order, OrderStatus, order_by_id, Reply
 from photos.models import Photo
 
 
@@ -148,19 +149,40 @@ class OrderById(APIView):
 
 class Replies(APIView):
 
+    permission_classes = (IsAuthenticated, IsConfirmed)
+
     @staticmethod
     def post(request, order_id):
-        # ToDo
-        content = {"id": 5,
-                   "order_id": order_id,
-                   "suggested_time_from": 123123,
-                   "suggested_time_to": 123124,
-                   "comment": "AAA",
-                   "cost": 7500,
-                   "creationDate": 123122,
-                   "status": "Рассматривается!",
-                   "master_id": 123}
-        return Response(content, status=HTTP_200_OK)
+        user = get_user(request)
+        try:
+            master = MasterAccount.objects.get(user=user)
+        except ObjectDoesNotExist:
+            return Response(status=HTTP_403_FORBIDDEN)
+        reply_form = ReplyForm(request.POST)
+        if reply_form.is_valid():
+            try:
+                order = order_by_id(order_id)
+                suggested_time_from = dt.utcfromtimestamp(
+                    int(reply_form.cleaned_data['suggested_time_from']))
+                suggested_time_to = dt.utcfromtimestamp(
+                    int(reply_form.cleaned_data['suggested_time_to']))
+                reply = Reply(
+                    cost=reply_form.cleaned_data['cost'],
+                    suggested_time_to=suggested_time_to,
+                    suggested_time_from=suggested_time_from,
+                    master=master,
+                    order=order,
+                    comment=request.POST.get('comment'),
+                    status=ReplyStatus.objects.get(code="cs")
+                )
+                reply.validation()
+            except ValidationError:
+                return Response(status=HTTP_400_BAD_REQUEST)
+            reply.save()
+            reply = ReplySerializer(reply)
+            return Response(reply.data, status=HTTP_201_CREATED)
+        else:
+            return Response(status=HTTP_400_BAD_REQUEST)
 
     @staticmethod
     def get(request):
