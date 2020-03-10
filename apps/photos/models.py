@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import (Model, DateTimeField,
                               ForeignKey, ImageField, CASCADE)
 from imagekit.models import ImageSpecField
-from imagekit.processors import ResizeToFill
+from imagekit.processors import ResizeToFit
 
 from personal_account.models import User, MasterAccount
 
@@ -15,9 +15,10 @@ class Photo(Model):
     date_created = DateTimeField(auto_now_add=True)
     image = ImageField(upload_to="photo_full")
     image_thumb = ImageSpecField(source='image',
-                                 processors=[ResizeToFill(100, 100)],
+                                 processors=[ResizeToFit(width=600,
+                                                         height=600)],
                                  format='JPEG',
-                                 options={'quality': 100})
+                                 options={'quality': 80})
 
     @staticmethod
     def validation(file):
