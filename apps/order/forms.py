@@ -19,6 +19,8 @@ class OrderForm(Form):
 
 
 class ReplyForm(Form):
-    suggested_time_from = CharField(max_length=10, min_length=10)
-    suggested_time_to = CharField(max_length=10, min_length=10)
+    suggested_time_to = IntegerField(min_value=now-10800,
+                                     max_value=now+15638400)
+    suggested_time_from = IntegerField(min_value=now-10800,
+                                       max_value=now+15638400)
     cost = IntegerField(min_value=0, max_value=2147483647)

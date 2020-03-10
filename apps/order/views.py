@@ -164,9 +164,9 @@ class Replies(APIView):
             try:
                 order = order_by_id(order_id)
                 suggested_time_from = dt.utcfromtimestamp(
-                    int(reply_form.cleaned_data['suggested_time_from']))
+                    reply_form.cleaned_data['suggested_time_from'])
                 suggested_time_to = dt.utcfromtimestamp(
-                    int(reply_form.cleaned_data['suggested_time_to']))
+                    reply_form.cleaned_data['suggested_time_to'])
                 reply = Reply(
                     cost=reply_form.cleaned_data['cost'],
                     suggested_time_to=suggested_time_to,
