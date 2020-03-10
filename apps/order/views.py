@@ -32,14 +32,14 @@ class OrderView(APIView):
             return Response(status=HTTP_403_FORBIDDEN)
         order_form = OrderForm(request.POST)
         if order_form.is_valid():
-            city = City.objects.get(id=request.POST.get('city_id'))
+            city = City.objects.get(id=order_form.cleaned_data['city_id'])
             master_type_id = MasterType.objects.get(
-                id=request.POST.get('master_type_id'))
+                id=order_form.cleaned_data['master_type_id'])
             status_code = OrderStatus.objects.get(code="sm")
             request_date_from = dt.utcfromtimestamp(
-                int(request.POST.get('request_date_from')))
+                order_form.cleaned_data['request_date_from'])
             request_date_to = dt.utcfromtimestamp(
-                int(request.POST.get('request_date_to')))
+                order_form.cleaned_data['request_date_to'])
             description = request.POST.get('description')
             order = Order(
                 client=client,
