@@ -37,6 +37,8 @@ class Registration(APIView):
             except ValidationError as e:
                 if str(e) == "['User with this phone_number already exists']":
                     user = User.objects.get(phone_number=phone_number)
+                    user.status_code = UserStatus.objects.get(code="rg")
+                    user.save()
                 else:
                     return Response(status=HTTP_400_BAD_REQUEST)
             c = PhoneCode(user=user, code=random_code)
@@ -85,7 +87,6 @@ class Logout(APIView):
     @staticmethod
     def post(request):
         token = get_token(request)
-        print(type(token))
         if isinstance(token, dict):
             return Response(token)
         token.delete()
