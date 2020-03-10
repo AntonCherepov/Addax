@@ -186,9 +186,10 @@ class Replies(APIView):
             return Response(status=HTTP_400_BAD_REQUEST)
 
     @staticmethod
-    def get(request):
+    def get(request, order_id):
         # ToDo
         content = [{"id": 5,
+                    "order_id": order_id,
                     "suggested_time_from": 123123,
                     "suggested_time_to": 123124,
                     "comment": "AAA",
