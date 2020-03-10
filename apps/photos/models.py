@@ -1,3 +1,6 @@
+from PIL import UnidentifiedImageError, Image
+from PIL.Image import DecompressionBombError
+from django.core.exceptions import ValidationError
 from django.db.models import (Model, DateTimeField,
                               ForeignKey, ImageField, CASCADE)
 from imagekit.models import ImageSpecField
@@ -15,6 +18,17 @@ class Photo(Model):
                                  processors=[ResizeToFill(100, 100)],
                                  format='JPEG',
                                  options={'quality': 100})
+
+    @staticmethod
+    def validation(file):
+        try:
+            img = Image.open(file)
+            if max(img.size) > 5000:
+                raise ValidationError("Image is too large")
+        except UnidentifiedImageError:
+            raise ValidationError("File is not image")
+        except DecompressionBombError:
+            raise ValidationError("Image size exceeds limit")
 
 
 class Workplace(Model):

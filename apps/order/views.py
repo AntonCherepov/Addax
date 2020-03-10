@@ -9,7 +9,6 @@ from rest_framework.status import (HTTP_200_OK, HTTP_400_BAD_REQUEST,
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
-from config.constants import IMAGE_EXTENSIONS
 from manuals.models import MasterType, City, ReplyStatus
 from order.forms import OrderForm, ReplyForm
 from order.serializers import OrderSerializer, ReplySerializer
@@ -50,17 +49,19 @@ class OrderView(APIView):
                 request_date_to=request_date_to,
                 status_code=status_code,
                 description=description, )
-            order.save()
             files = request.FILES
-            image_keys = list(filter(
-                lambda k: str(files[k]).endswith(IMAGE_EXTENSIONS),
-                files.keys()
-            )
-            )
-            for key in image_keys[:5:]:
-                photo = Photo(user=user, image=files[key])
+            photos = []
+            for key in list(files.keys())[:5:]:
+                try:
+                    Photo.validation(files[key])
+                    photo = Photo(user=user, image=files[key])
+                    photos.append(photo)
+                except ValidationError:
+                    return Response(status=HTTP_400_BAD_REQUEST)
+            order.save()
+            for photo in photos:
                 photo.save()
-                order.photo.add(photo)
+            order.photo.add(*photos)
             order = OrderSerializer(order)
             return Response({"order": order.data}, status=HTTP_201_CREATED)
         else:
