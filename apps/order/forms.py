@@ -1,5 +1,3 @@
-from time import time
-
 from django.forms import CharField, IntegerField, Form
 
 from manuals.models import MasterType, City

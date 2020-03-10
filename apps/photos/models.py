@@ -1,4 +1,4 @@
-from django.db.models import (Model, IntegerField, DateTimeField,
+from django.db.models import (Model, DateTimeField,
                               ForeignKey, ImageField, CASCADE)
 from imagekit.models import ImageSpecField
 from imagekit.processors import ResizeToFill
@@ -15,9 +15,6 @@ class Photo(Model):
                                  processors=[ResizeToFill(100, 100)],
                                  format='JPEG',
                                  options={'quality': 100})
-
-    def __str__(self):
-        return [self.image, self.image_thumb]
 
 
 class Workplace(Model):
