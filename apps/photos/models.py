@@ -30,15 +30,3 @@ class Photo(Model):
             raise ValidationError("File is not image")
         except DecompressionBombError:
             raise ValidationError("Image size exceeds limit")
-
-
-class Workplace(Model):
-
-    photo = ForeignKey(Photo, on_delete=CASCADE)
-    master = ForeignKey(MasterAccount, on_delete=CASCADE)
-
-
-class Gallery(Model):
-
-    photo = ForeignKey(Photo, on_delete=CASCADE)
-    master = ForeignKey(MasterAccount, on_delete=CASCADE)
