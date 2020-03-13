@@ -49,6 +49,10 @@ class OrderView(APIView):
                 request_date_to=request_date_to,
                 status_code=status_code,
                 description=description, )
+            try:
+                order.validation()
+            except ValidationError:
+                return Response(status=HTTP_400_BAD_REQUEST)
             files = request.FILES
             photos = []
             for key in list(files.keys())[:5:]:

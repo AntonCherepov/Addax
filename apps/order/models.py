@@ -32,6 +32,11 @@ class Order(Model):
     photo = ManyToManyField(Photo)
     client = ForeignKey(ClientAccount, on_delete=CASCADE)
 
+    def validation(self):
+        if self.request_date_from >= self.request_date_to:
+            raise ValidationError("Field \"request_date_from\" can't be more "
+                                  "or equal than field \"request_date_to\".")
+
 
 class Reply(Model):
 
@@ -48,3 +53,7 @@ class Reply(Model):
     def validation(self):
         if Reply.objects.filter(master=self.master, order=self.order).exists():
             raise ValidationError("Reply already exists.")
+        if self.suggested_time_from >= self.suggested_time_to:
+            raise ValidationError("Field \"suggested_time_from\" can't be more"
+                                  "or equal than field "
+                                  "\"suggested_time_from.\"")
