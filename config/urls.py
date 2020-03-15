@@ -9,6 +9,7 @@ urlpatterns = [
     path(v+'users/', include('personal_account.urls')),
     path(v+'orders/', include('order.urls')),
     path(v+'manuals/', include('manuals.urls')),
+    path(v+'albums/', include('photos.urls'),)
 ]
 
 if settings.DEBUG:

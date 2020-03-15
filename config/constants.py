@@ -1,0 +1,16 @@
+AVATAR = 'AV'
+MASTER_GALLERY = 'MG'
+MASTER_WORKPLACE = 'MW'
+ORDER = 'OR'
+ALBUM_TYPE_CHOICES = [
+    (AVATAR, 'Avatar'),
+    (MASTER_GALLERY, 'MasterGallery'),
+    (MASTER_WORKPLACE, 'MasterWorkPlace'),
+    (ORDER, 'Order'),
+]
+MAX_ALBUM_COUNTS = {
+    AVATAR: 1,
+    ORDER: 5,
+    MASTER_WORKPLACE: 2000,
+    MASTER_GALLERY: 2000,
+}

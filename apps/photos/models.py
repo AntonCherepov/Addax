@@ -6,25 +6,43 @@ from django.db.models import (Model, DateTimeField, CharField,
 from imagekit.models import ImageSpecField
 from imagekit.processors import ResizeToFit
 
+from config.constants import MAX_ALBUM_COUNTS, ALBUM_TYPE_CHOICES
 from personal_account.models import User
 
 
 class Album(Model):
 
-    AVATAR = 'AV'
-    MASTER_GALLERY = 'MG'
-    MASTER_WORKPLACE = 'MW'
-    ORDER = 'OR'
-    ALBUM_TYPE_CHOICES = [
-        (AVATAR, 'Avatar'),
-        (MASTER_GALLERY, 'MasterGallery'),
-        (MASTER_WORKPLACE, 'MasterWorkPlace'),
-        (ORDER, 'Order'),
-    ]
     user = ForeignKey(User, on_delete=CASCADE)
     type = CharField(max_length=2,
                      choices=ALBUM_TYPE_CHOICES,
                      null=True)
+
+    def validate_count(self, files):
+        files_count = len(files)
+        if files_count < 1:
+            raise ValidationError("No photos in request.")
+        photos = Photo.objects.filter(album=self)
+        count = photos.count() + files_count
+        if count > MAX_ALBUM_COUNTS[self.type]:
+            raise ValidationError("Too many photos.")
+
+    def validate_album_exist(self, user):
+        if not Album.objects.filter(id=self.id, user=user).exists():
+            raise ValidationError("No album with this album_id for current "
+                                  "user.")
+
+    def validate_photo_exist(self, user):
+        if not Photo.objects.filter(id=self.id, user=user).exists():
+            raise ValidationError("No photo with this photo_id for current "
+                                  "user.")
+
+    def validate_post_request(self, files, user):
+        self.validate_album_exist(user)
+        self.validate_count(files)
+
+    def validate_delete_request(self, user):
+        self.validate_album_exist(user)
+        self.validate_photo_exist(user)
 
 
 class Photo(Model):
