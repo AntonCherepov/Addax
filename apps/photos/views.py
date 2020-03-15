@@ -64,3 +64,17 @@ class AlbumView(APIView):
             return Response({"photos": photos.data}, status=HTTP_201_CREATED)
         except ValidationError:
             return Response(status=HTTP_400_BAD_REQUEST)
+
+
+class PhotoView(APIView):
+
+    @staticmethod
+    def delete(request, album_id, photo_id):
+        user = get_user(request)
+        album = get_object_or_404(Album, id=album_id)
+        photo = get_object_or_404(Photo,
+                                  user=user,
+                                  album=album,
+                                  id=int(photo_id))
+        photo.delete()
+        return Response(status=HTTP_204_NO_CONTENT)
