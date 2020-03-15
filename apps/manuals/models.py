@@ -38,7 +38,7 @@ class UserStatus(Model):
 
 class OrderStatus(Model):
     code = CharField(max_length=2, unique=True, primary_key=True)
-    name = CharField(max_length=15)
+    name = CharField(max_length=20)
 
     def __str__(self):
         return self.code
@@ -46,7 +46,7 @@ class OrderStatus(Model):
 
 class ReplyStatus(Model):
     code = CharField(max_length=2, unique=True, primary_key=True)
-    name = CharField(max_length=10)
+    name = CharField(max_length=15)
 
     def __str__(self):
         return self.code
