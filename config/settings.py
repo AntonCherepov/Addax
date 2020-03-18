@@ -1,7 +1,6 @@
 import os
 import sys
 
-# чекнуть
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
@@ -24,10 +23,10 @@ INSTALLED_APPS = [
 
     'corsheaders',
 
-    'personal_account.apps.PersonalAccountConfig',
-    'order.apps.WorkRequestConfig',
+    'users.apps.UsersConfig',
+    'orders.apps.OrdersConfig',
     'manuals.apps.ManualsConfig',
-    'photos.apps.PhotosConfig',
+    'albums.apps.AlbumsConfig',
 
 ]
 
@@ -104,7 +103,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = 'personal_account.User'
+AUTH_USER_MODEL = 'users.User'
 
 LANGUAGE_CODE = 'en-us'
 

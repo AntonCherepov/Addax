@@ -1,6 +1,6 @@
 from django.contrib.admin import ModelAdmin, site
 
-from personal_account.models import User, PhoneCode
+from users.models import User, PhoneCode
 
 
 class UserAdmin(ModelAdmin):

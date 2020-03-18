@@ -9,15 +9,15 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 
 from manuals.models import UserStatus
-from personal_account.custom_permissions import IsConfirmed, IsNotBanned
-from personal_account.models import (User, PhoneCode, get_token,
-                                     UserType, MasterAccount, get_user,
-                                     ClientAccount)
-from personal_account.forms import RegistrationForm, ConfirmationForm
-from personal_account.serializers import UserSerializer
+from users.custom_permissions import IsConfirmed, IsNotBanned
+from users.models import (User, PhoneCode, get_token,
+                          UserType, MasterAccount, get_user,
+                          ClientAccount)
+from users.forms import RegistrationForm, ConfirmationForm
+from users.serializers import UserSerializer
 
 
-class Registration(APIView):
+class RegistrationView(APIView):
 
     permission_classes = (IsNotBanned,)
 
@@ -30,7 +30,7 @@ class Registration(APIView):
             type_code = registration_form.cleaned_data["type_code"]
             try:
                 user = User(phone_number=phone_number, username=phone_number)
-                user.reg_validation(type_code)
+                user.validate_registration_request(type_code)
                 user.type_code = UserType.objects.get(code=type_code)
                 user.status_code = UserStatus.objects.get(code="rg")
                 user.save()
@@ -48,7 +48,7 @@ class Registration(APIView):
             return Response(status=HTTP_400_BAD_REQUEST)
 
 
-class Confirmation(APIView):
+class ConfirmationView(APIView):
 
     @staticmethod
     def post(request):
@@ -58,8 +58,8 @@ class Confirmation(APIView):
             code = confirmation_form.cleaned_data["code"]
             try:
                 user = User.objects.get(phone_number=phone_number)
-                user.confirm_validation()
-                PhoneCode(user=user, code=code).check_()
+                user.validate_confirmation_request()
+                PhoneCode(user=user, code=code).validate()
                 user.status_code = UserStatus.objects.get(code="cf")
                 user.save()
                 if user.type_code.code == "m":
@@ -80,7 +80,7 @@ class Confirmation(APIView):
             return Response(status=HTTP_400_BAD_REQUEST)
 
 
-class Logout(APIView):
+class LogoutView(APIView):
 
     permission_classes = (IsAuthenticated, IsConfirmed)
 
@@ -93,7 +93,7 @@ class Logout(APIView):
         return Response(status=HTTP_200_OK)
 
 
-class IsValidToken(APIView):
+class IsValidTokenView(APIView):
 
     permission_classes = (IsAuthenticated, IsConfirmed)
 
@@ -105,7 +105,7 @@ class IsValidToken(APIView):
         return Response(content)
 
 
-class Masters(APIView):
+class MastersView(APIView):
 
     @staticmethod
     def get(request, master_id):
@@ -151,7 +151,7 @@ class Masters(APIView):
         return Response(content, status=HTTP_200_OK)
 
 
-class Clients(APIView):
+class ClientsView(APIView):
 
     permission_classes = (IsAuthenticated,)
 

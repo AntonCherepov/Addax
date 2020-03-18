@@ -6,10 +6,10 @@ from django.urls import path, include
 v = "v1/"
 urlpatterns = [
     path(v+'admin/', admin.site.urls),
-    path(v+'users/', include('personal_account.urls')),
-    path(v+'orders/', include('order.urls')),
+    path(v+'users/', include('users.urls')),
+    path(v+'orders/', include('orders.urls')),
     path(v+'manuals/', include('manuals.urls')),
-    path(v+'albums/', include('photos.urls'),)
+    path(v+'albums/', include('albums.urls'),)
 ]
 
 if settings.DEBUG:

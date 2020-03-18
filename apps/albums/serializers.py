@@ -1,7 +1,7 @@
 from rest_framework.serializers import Serializer, ImageField, IntegerField
 
 from core.serializers import DynamicFieldsModelSerializer
-from photos.models import Photo
+from albums.models import Photo
 
 
 class PhotoSerializer(Serializer):

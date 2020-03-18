@@ -6,10 +6,10 @@ from rest_framework.status import (HTTP_400_BAD_REQUEST, HTTP_200_OK,
                                    HTTP_201_CREATED, HTTP_204_NO_CONTENT)
 from rest_framework.views import APIView
 
-from personal_account.custom_permissions import IsConfirmed
-from personal_account.models import get_user
-from photos.models import Photo, Album
-from photos.serializers import DynamicPhotoSerializer, PhotoSerializer
+from users.custom_permissions import IsConfirmed
+from users.models import get_user
+from albums.models import Photo, Album
+from albums.serializers import DynamicPhotoSerializer, PhotoSerializer
 
 
 class AlbumView(APIView):
@@ -56,7 +56,7 @@ class AlbumView(APIView):
             album.validate_post_request(files=files, user=user)
             photos = []
             for key in tuple(files):
-                    Photo.validation(files[key])
+                    Photo.validate(files[key])
                     photo = Photo(user=user, image=files[key], album=album)
                     photos.append(photo)
             Photo.objects.bulk_create(photos)

@@ -7,7 +7,7 @@ from imagekit.models import ImageSpecField
 from imagekit.processors import ResizeToFit
 
 from config.constants import MAX_ALBUM_COUNTS, ALBUM_TYPE_CHOICES
-from personal_account.models import User
+from users.models import User
 
 
 class Album(Model):
@@ -58,7 +58,7 @@ class Photo(Model):
                                  options={'quality': 80})
 
     @staticmethod
-    def validation(file):
+    def validate(file):
         try:
             img = Image.open(file)
             if max(img.size) > 5000:

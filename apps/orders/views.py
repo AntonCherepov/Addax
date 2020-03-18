@@ -10,12 +10,12 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
 from manuals.models import MasterType, City, ReplyStatus
-from order.forms import OrderForm, ReplyForm
-from order.serializers import OrderSerializer, ReplySerializer
-from personal_account.custom_permissions import IsConfirmed
-from personal_account.models import get_user, ClientAccount, MasterAccount
-from order.models import Order, OrderStatus, order_by_id, Reply
-from photos.models import Photo
+from orders.forms import OrderForm, ReplyForm
+from orders.serializers import OrderSerializer, ReplySerializer
+from users.custom_permissions import IsConfirmed
+from users.models import get_user, ClientAccount, MasterAccount
+from orders.models import Order, OrderStatus, order_by_id, Reply
+from albums.models import Photo
 
 
 class OrderView(APIView):
@@ -50,14 +50,14 @@ class OrderView(APIView):
                 status_code=status_code,
                 description=description, )
             try:
-                order.validation()
+                order.validate()
             except ValidationError:
                 return Response(status=HTTP_400_BAD_REQUEST)
             files = request.FILES
             photos = []
-            for key in list(files.keys())[:5:]:
+            for key in tuple(files)[:5:]:
                 try:
-                    Photo.validation(files[key])
+                    Photo.validate(files[key])
                     photo = Photo(user=user, image=files[key])
                     photos.append(photo)
                 except ValidationError:
@@ -117,7 +117,7 @@ class OrderView(APIView):
             return Response(status=HTTP_400_BAD_REQUEST)
 
 
-class OrderById(APIView):
+class OrderByIdView(APIView):
 
     @staticmethod
     def patch(request, order_id):
@@ -152,7 +152,7 @@ class OrderById(APIView):
         return Response(content, status=HTTP_200_OK)
 
 
-class Replies(APIView):
+class RepliesView(APIView):
 
     permission_classes = (IsAuthenticated, IsConfirmed)
 
@@ -180,7 +180,7 @@ class Replies(APIView):
                     comment=request.POST.get('comment'),
                     status=ReplyStatus.objects.get(code="cs")
                 )
-                reply.validation()
+                reply.validate()
             except ValidationError:
                 return Response(status=HTTP_400_BAD_REQUEST)
             reply.save()

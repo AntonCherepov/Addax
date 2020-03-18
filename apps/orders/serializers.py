@@ -1,8 +1,8 @@
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 
-from order.models import Order, Reply
-from photos.serializers import PhotoSerializer
+from orders.models import Order, Reply
+from albums.serializers import PhotoSerializer
 
 
 class OrderSerializer(ModelSerializer):

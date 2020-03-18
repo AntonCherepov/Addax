@@ -56,7 +56,7 @@ class User(AbstractUser):
         confirmed_status = UserStatus.objects.get(code="cf")
         return True if self.status_code == confirmed_status else False
 
-    def reg_validation(self, type_code=None):
+    def validate_phone(self):
         try:
             int(str(self.phone_number))
         except ValueError:
@@ -71,11 +71,13 @@ class User(AbstractUser):
                 raise ValidationError('User is banned')
         except ObjectDoesNotExist:
             pass
-        if type_code is not None:
-            if not UserType.objects.filter(code=type_code).exists():
-                raise ValidationError('Incorrect type_code')
 
-    def confirm_validation(self):
+    @staticmethod
+    def validate_type_code(type_code):
+        if not UserType.objects.filter(code=type_code).exists():
+            raise ValidationError('Incorrect type_code')
+
+    def validate_confirmation_request(self):
         users = User.objects.filter(phone_number=self.phone_number)
         if users.count() > 1:
             raise ValidationError('Too many users')
@@ -84,6 +86,10 @@ class User(AbstractUser):
                                   'exists')
         elif self.status_code != UserStatus.objects.get(code="rg"):
             raise ValidationError("User does not need confirmation")
+
+    def validate_registration_request(self, type_code):
+        self.validate_phone()
+        self.validate_type_code(type_code)
 
     class Meta:
         verbose_name_plural = 'Пользователи'
@@ -100,7 +106,7 @@ class PhoneCode(Model):
     def __str__(self):
         return self.code
 
-    def check_(self):
+    def validate(self):
         confirm_codes = PhoneCode.objects.filter(user=self.user)
         if confirm_codes.exists():
             confirm_code = confirm_codes.order_by("-id")[:1:][0]

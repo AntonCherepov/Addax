@@ -3,8 +3,8 @@ from django.db.models import (Model, CharField, DateTimeField, IntegerField,
                               ForeignKey, ManyToManyField, CASCADE, SET_NULL,)
 
 from manuals.models import City, OrderStatus, ReplyStatus
-from personal_account.models import MasterType, ClientAccount, MasterAccount
-from photos.models import Photo
+from users.models import MasterType, ClientAccount, MasterAccount
+from albums.models import Photo
 
 
 def order_by_id(order_id=None):
@@ -32,7 +32,7 @@ class Order(Model):
     photo = ManyToManyField(Photo)
     client = ForeignKey(ClientAccount, on_delete=CASCADE)
 
-    def validation(self):
+    def validate(self):
         if self.request_date_from >= self.request_date_to:
             raise ValidationError("Field \"request_date_from\" can't be more "
                                   "or equal than field \"request_date_to\".")
@@ -50,7 +50,7 @@ class Reply(Model):
     date_modified = DateTimeField(auto_now=True)
     status = ForeignKey(ReplyStatus, on_delete=SET_NULL, null=True)
 
-    def validation(self):
+    def validate(self):
         if Reply.objects.filter(master=self.master, order=self.order).exists():
             raise ValidationError("Reply already exists.")
         if self.suggested_time_from >= self.suggested_time_to:

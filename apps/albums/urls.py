@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.photos.views import AlbumView, PhotoView
+from apps.albums.views import AlbumView, PhotoView
 
 urlpatterns = [
     path('<int:album_id>/photos/', AlbumView.as_view()),
