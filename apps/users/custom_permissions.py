@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission
 
-from users.models import get_user
+from users.utils import get_user
 
 
 class IsConfirmed(BasePermission):

@@ -1,4 +1,4 @@
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ValidationError
 from django.db.models import (Model, CharField, DateTimeField, IntegerField,
                               ForeignKey, CASCADE, SET_NULL, OneToOneField)
 
@@ -6,17 +6,6 @@ from config.constants import ORDER
 from manuals.models import City, OrderStatus, ReplyStatus
 from users.models import MasterType, ClientAccount, MasterAccount
 from albums.models import Album
-
-
-def order_by_id(order_id=None):
-    if isinstance(order_id, int):
-        try:
-            order = Order.objects.get(id=order_id)
-            return order
-        except ObjectDoesNotExist:
-            raise ValidationError(f"No order by {order_id = }")
-    else:
-        raise ValidationError(f"Invalid order_id")
 
 
 class Order(Model):
