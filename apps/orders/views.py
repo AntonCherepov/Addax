@@ -15,7 +15,6 @@ from orders.serializers import OrderSerializer, ReplySerializer
 from users.custom_permissions import IsConfirmed
 from users.models import get_user, ClientAccount, MasterAccount
 from orders.models import Order, OrderStatus, order_by_id, Reply
-from albums.models import Photo
 
 
 class OrderView(APIView):
@@ -53,19 +52,8 @@ class OrderView(APIView):
                 order.validate()
             except ValidationError:
                 return Response(status=HTTP_400_BAD_REQUEST)
-            files = request.FILES
-            photos = []
-            for key in tuple(files)[:5:]:
-                try:
-                    Photo.validate(files[key])
-                    photo = Photo(user=user, image=files[key])
-                    photos.append(photo)
-                except ValidationError:
-                    return Response(status=HTTP_400_BAD_REQUEST)
+            order.create_album()
             order.save()
-            for photo in photos:
-                photo.save()
-            order.photo.add(*photos)
             order = OrderSerializer(order)
             return Response({"order": order.data}, status=HTTP_201_CREATED)
         else:

@@ -1,10 +1,11 @@
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import (Model, CharField, DateTimeField, IntegerField,
-                              ForeignKey, ManyToManyField, CASCADE, SET_NULL,)
+                              ForeignKey, CASCADE, SET_NULL, OneToOneField)
 
+from config.constants import ORDER
 from manuals.models import City, OrderStatus, ReplyStatus
 from users.models import MasterType, ClientAccount, MasterAccount
-from albums.models import Photo
+from albums.models import Album
 
 
 def order_by_id(order_id=None):
@@ -29,13 +30,18 @@ class Order(Model):
     request_date_to = DateTimeField()
     selection_date = DateTimeField(null=True)
     description = CharField(max_length=1000, null=True)
-    photo = ManyToManyField(Photo)
+    album = OneToOneField(Album, null=True, on_delete=SET_NULL)
     client = ForeignKey(ClientAccount, on_delete=CASCADE)
 
     def validate(self):
         if self.request_date_from >= self.request_date_to:
             raise ValidationError("Field \"request_date_from\" can't be more "
                                   "or equal than field \"request_date_to\".")
+
+    def create_album(self):
+        a = Album(user=self.client.user, type=ORDER)
+        a.save()
+        self.album = a
 
 
 class Reply(Model):

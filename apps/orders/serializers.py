@@ -6,10 +6,10 @@ from albums.serializers import PhotoSerializer
 
 
 class OrderSerializer(ModelSerializer):
-    images = PhotoSerializer(many=True, read_only=True, source='photo')
     city = SerializerMethodField('get_city_name')
     master_type = SerializerMethodField('get_master_type_name')
     status = SerializerMethodField('get_status_name')
+    album_id = SerializerMethodField('get_album_id')
 
     @staticmethod
     def get_city_name(obj):
@@ -23,9 +23,13 @@ class OrderSerializer(ModelSerializer):
     def get_status_name(obj):
         return obj.status_code.name
 
+    @staticmethod
+    def get_album_id(obj):
+        return obj.album.id
+
     class Meta:
         model = Order
-        exclude = ("photo", "status_code", "client")
+        exclude = ("status_code", "client", "album",)
 
 
 class ReplySerializer(ModelSerializer):

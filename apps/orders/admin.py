@@ -9,7 +9,6 @@ class OrderAdmin(ModelAdmin):
                     "date_modified", "request_date_from", "request_date_to",
                     "city", "selection_date", "description",
                     "client",)
-    filter_horizontal = ("photo",)
 
 
 site.register(Order, OrderAdmin)
