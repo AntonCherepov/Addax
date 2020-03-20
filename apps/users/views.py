@@ -9,7 +9,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 
 from manuals.models import UserStatus
-from users.custom_permissions import IsConfirmed, IsNotBanned
+from users.permissions import IsConfirmed, IsNotBanned
 from users.models import (User, PhoneCode, UserType, MasterAccount,
                           ClientAccount)
 from users.utils import get_token, get_user

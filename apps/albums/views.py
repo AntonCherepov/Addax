@@ -7,7 +7,7 @@ from rest_framework.status import (HTTP_400_BAD_REQUEST, HTTP_200_OK,
 from rest_framework.views import APIView
 
 from albums.utils import create_photos
-from users.custom_permissions import IsConfirmed
+from users.permissions import IsConfirmed
 from users.utils import get_user
 from albums.models import Photo, Album
 from albums.serializers import DynamicPhotoSerializer, PhotoSerializer

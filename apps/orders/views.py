@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from manuals.models import MasterType, City, ReplyStatus
 from orders.forms import OrderForm, ReplyForm
 from orders.serializers import OrderSerializer, ReplySerializer
-from users.custom_permissions import IsConfirmed
+from users.permissions import IsConfirmed
 from users.models import ClientAccount, MasterAccount
 from users.utils import get_user
 from orders.models import Order, OrderStatus, Reply
