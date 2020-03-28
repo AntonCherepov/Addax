@@ -96,9 +96,9 @@ class PhoneCode(Model):
 class MasterAccount(Model):
 
     user = OneToOneField(User, on_delete=CASCADE)
-    type_s = ManyToManyField(MasterType, related_name="type")
+    types = ManyToManyField(MasterType)
     about_myself = CharField(null=True, max_length=10000)
-    status_code = ForeignKey(MasterStatus, on_delete=SET_NULL, null=True)
+    status = ForeignKey(MasterStatus, on_delete=SET_NULL, null=True)
     name = CharField(max_length=100)
     address = CharField(max_length=250)
 
