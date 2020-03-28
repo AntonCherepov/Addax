@@ -33,8 +33,6 @@ class AlbumView(APIView):
             else:
                 photos = photos[:25:]
             if fields:
-                fields = list(fields.split(","))
-                fields = list(filter(lambda f: f != "date_added", fields))
                 photos = DynamicPhotoSerializer(photos,
                                                 many=True,
                                                 fields=fields)
