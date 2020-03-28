@@ -9,7 +9,9 @@ class DynamicFieldsModelSerializer(ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         # Don't pass the 'fields' arg up to the superclass
-        fields = self.raw_fields_to_set(kwargs.pop('fields', None))
+        fields = kwargs.pop('fields', None)
+        if isinstance(fields, str):
+            fields = self.raw_fields_to_set(fields)
 
         # Instantiate the superclass normally
         super(DynamicFieldsModelSerializer, self).__init__(*args, **kwargs)
