@@ -1,6 +1,7 @@
 from random import randint
 
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from rest_framework.generics import get_object_or_404
 
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
@@ -8,13 +9,14 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 
+from config.constants import DEFAULT_MASTER_FIELDS
 from manuals.models import UserStatus
 from users.permissions import IsConfirmed, IsNotBanned
 from users.models import (User, PhoneCode, UserType, MasterAccount,
                           ClientAccount)
 from users.utils import get_token, get_user
 from users.forms import RegistrationForm, ConfirmationForm
-from users.serializers import UserSerializer
+from users.serializers import UserSerializer, MasterSerializer
 
 
 class RegistrationView(APIView):
@@ -107,32 +109,18 @@ class IsValidTokenView(APIView):
 
 class MastersView(APIView):
 
+    permission_classes = (IsConfirmed, IsNotBanned)
+
     @staticmethod
     def get(request, master_id):
-        content = {"id": master_id,
-                   "name": "Салон",
-                   "address": "Вильгельма пика 4",
-                   "about_myself": "Нет описания",
-                   "master_types": ["Парикмахер", "Педикюр", "Маникюр"],
-                   "status": "active",
-                   "creation_date": 5231,
-                   "modified_date": 5232,
-                   "status_code": "s",
-                   "gallery_last": master_id,
-                   "gallery_size": 2,
-                   "gallery_all": 15,
-                   "workplace_last": master_id,
-                   "workplace_size": 2,
-                   "workplace_all": 7,
-                   "avatar": ["/media/avatar.jpg", "/media/avatar_small.jpg"],
-                   "gallery": [["/media/lol.jpg", "/media/lol_small.jpg"],
-                               ["/media/abc.jpg", "/media/abc_small.jpg"]
-                               ],
-                   "workplace": [["/media/lol.jpg", "/media/lol_small.jpg"],
-                                 ["/media/abc.jpg", "/media/abc_small.jpg"]
-                               ]
-                   }
-        return Response(content, status=HTTP_200_OK)
+        u = get_user(request)
+        fields = DEFAULT_MASTER_FIELDS.copy()
+        if u.type_code.name == "master":
+            if u.masteraccount.id == master_id:
+                fields.append("status")
+        master = get_object_or_404(MasterAccount, id=master_id)
+        serializer = MasterSerializer(master, fields=fields)
+        return Response(serializer.data, status=HTTP_200_OK)
 
     @staticmethod
     def patch(request, master_id):
