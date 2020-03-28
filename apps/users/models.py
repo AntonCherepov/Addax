@@ -5,6 +5,7 @@ from django.db.models import (CharField, Model, CASCADE,
                               IntegerField, DateTimeField, ForeignKey,
                               OneToOneField, SET_NULL, ManyToManyField,)
 
+from config.constants import AVATAR, MASTER_WORKPLACE, MASTER_GALLERY
 from manuals.models import MasterType, UserType, UserStatus, MasterStatus
 
 
@@ -102,6 +103,8 @@ class MasterAccount(Model):
     address = CharField(max_length=250)
 
     def create_account(self):
+        from albums.models import Album
+
         if ClientAccount.objects.filter(user=self.user).exists():
             return False
         if not MasterAccount.objects.filter(user=self.user).exists():
@@ -111,6 +114,13 @@ class MasterAccount(Model):
                 status_code = MasterStatus(code="uv", name="unverified")
                 status_code.save()
             p = MasterAccount(user=self.user, status_code=status_code)
+            Album.objects.bulk_create(
+                [
+                    Album(user=self.user, type=AVATAR),
+                    Album(user=self.user, type=MASTER_WORKPLACE),
+                    Album(user=self.user, type=MASTER_GALLERY),
+                ]
+            )
             p.save()
 
 
