@@ -26,5 +26,5 @@ class IsNotBanned(BasePermission):
         if bool(request.user and request.user.is_authenticated):
             user = get_user(request)
             if user is not None:
-                return user.is_banned()
+                return not user.is_banned()
         return True
