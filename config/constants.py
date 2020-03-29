@@ -23,5 +23,5 @@ DEFAULT_MASTER_FIELDS = [
             "avatar_album_id", "gallery_album_id",
             "workplace_album_id", "about_myself",
             "name", "address",
-            "status_code"
+            "status"
         ]
