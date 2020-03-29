@@ -116,12 +116,15 @@ class MastersView(APIView):
         u = get_user(request)
         master = get_object_or_404(MasterAccount, id=master_id)
         fields = request.GET.get("fields")
+        exclude_fields = {"status"}
         if not fields:
             fields = DEFAULT_MASTER_FIELDS.copy()
         if u.type_code.name == "master":
             if u.masteraccount.id == master_id:
-                fields.append("status")
-        serializer = MasterSerializer(master, fields=fields)
+                exclude_fields.discard("status")
+        serializer = MasterSerializer(master,
+                                      fields=fields,
+                                      exclude_fields=exclude_fields)
         return Response(serializer.data, status=HTTP_200_OK)
 
     @staticmethod

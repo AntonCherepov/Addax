@@ -10,21 +10,21 @@ class DynamicFieldsModelSerializer(ModelSerializer):
     def __init__(self, *args, **kwargs):
         # Don't pass the 'fields' arg up to the superclass
         fields = kwargs.pop('fields', None)
+        exclude_fields = kwargs.pop('exclude_fields', None)
         if isinstance(fields, str):
             fields = self.raw_fields_to_set(fields)
-
         # Instantiate the superclass normally
         super(DynamicFieldsModelSerializer, self).__init__(*args, **kwargs)
 
         if fields is not None:
             # Drop any fields that are not specified in the `fields` argument.
             allowed = set(fields)
+            if exclude_fields is not None:
+                allowed -= set(exclude_fields)
             existing = set(self.fields)
             for field_name in existing - allowed:
                 self.fields.pop(field_name)
 
     @staticmethod
     def raw_fields_to_set(fields):
-        fields = set(str(fields).split(","))
-        fields = set(filter(lambda f: f != "date_added", fields))
-        return fields
+        return set(str(fields).split(","))
