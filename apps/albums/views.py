@@ -16,8 +16,7 @@ from albums.serializers import DynamicPhotoSerializer, PhotoSerializer
 class AlbumView(APIView):
     permission_classes = (IsAuthenticated, IsConfirmed)
 
-    @staticmethod
-    def get(request, album_id):
+    def get(self, request, album_id):
         photos = Photo.objects.filter(album=album_id)
         count = photos.count()
         limit = request.GET.get("limit")
@@ -48,8 +47,7 @@ class AlbumView(APIView):
         return Response({"photos": photos.data, "count": count},
                         status=HTTP_200_OK)
 
-    @staticmethod
-    def post(request, album_id):
+    def post(self, request, album_id):
         files = request.FILES
         album = get_object_or_404(Album, id=album_id)
         try:
@@ -65,8 +63,7 @@ class AlbumView(APIView):
 
 class PhotoView(APIView):
 
-    @staticmethod
-    def delete(request, album_id, photo_id):
+    def delete(self, request, album_id, photo_id):
         user = get_user(request)
         album = get_object_or_404(Album, id=album_id)
         photo = get_object_or_404(Photo,

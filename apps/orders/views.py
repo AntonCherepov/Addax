@@ -22,8 +22,7 @@ from orders.utils import order_by_id
 class OrderView(APIView):
     permission_classes = (IsAuthenticated, IsConfirmed)
 
-    @staticmethod
-    def post(request):
+    def post(self, request):
         user = get_user(request)
         if isinstance(user, dict):
             return Response(status=HTTP_400_BAD_REQUEST)
@@ -61,8 +60,7 @@ class OrderView(APIView):
         else:
             return Response(status=HTTP_400_BAD_REQUEST)
 
-    @staticmethod
-    def get(request):
+    def get(self, request):
         user = get_user(request)
         if isinstance(user, dict):
             return Response(user)
@@ -109,13 +107,11 @@ class OrderView(APIView):
 
 class OrderByIdView(APIView):
 
-    @staticmethod
-    def patch(request, order_id):
+    def patch(self, request, order_id):
         # ToDo
         return Response(status=HTTP_200_OK)
 
-    @staticmethod
-    def get(request, order_id):
+    def get(self, request, order_id):
         # ToDo
         content = {"id": order_id, "town": "Москва",
                    "masterType": "Парикмахер",
@@ -146,8 +142,7 @@ class RepliesView(APIView):
 
     permission_classes = (IsAuthenticated, IsConfirmed)
 
-    @staticmethod
-    def post(request, order_id):
+    def post(self, request, order_id):
         user = get_user(request)
         try:
             master = MasterAccount.objects.get(user=user)
@@ -179,8 +174,7 @@ class RepliesView(APIView):
         else:
             return Response(status=HTTP_400_BAD_REQUEST)
 
-    @staticmethod
-    def get(request, order_id):
+    def get(self, request, order_id):
         # ToDo
         content = [{"id": 5,
                     "order_id": order_id,

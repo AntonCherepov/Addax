@@ -23,8 +23,7 @@ class RegistrationView(APIView):
 
     permission_classes = (IsNotBanned,)
 
-    @staticmethod
-    def post(request):
+    def post(self, request):
         registration_form = RegistrationForm(request.POST)
         random_code = str(randint(100000, 999999))
         if registration_form.is_valid():
@@ -52,8 +51,7 @@ class RegistrationView(APIView):
 
 class ConfirmationView(APIView):
 
-    @staticmethod
-    def post(request):
+    def post(self, request):
         confirmation_form = ConfirmationForm(request.POST)
         if confirmation_form.is_valid():
             phone_number = confirmation_form.cleaned_data["phone"]
@@ -86,8 +84,7 @@ class LogoutView(APIView):
 
     permission_classes = (IsAuthenticated, IsConfirmed)
 
-    @staticmethod
-    def post(request):
+    def post(self, request):
         token = get_token(request)
         if isinstance(token, dict):
             return Response(token)
@@ -99,8 +96,7 @@ class IsValidTokenView(APIView):
 
     permission_classes = (IsAuthenticated, IsConfirmed)
 
-    @staticmethod
-    def get(request):
+    def get(self, request):
         u = get_user(request)
         serialized_user = UserSerializer(u)
         content = {"user": serialized_user.data}
@@ -111,8 +107,7 @@ class MastersView(APIView):
 
     permission_classes = (IsConfirmed, IsNotBanned)
 
-    @staticmethod
-    def get(request, master_id):
+    def get(self, request, master_id):
         u = get_user(request)
         master = get_object_or_404(MasterAccount, id=master_id)
         fields = request.GET.get("fields")
@@ -127,8 +122,7 @@ class MastersView(APIView):
                                       exclude_fields=exclude_fields)
         return Response(serializer.data, status=HTTP_200_OK)
 
-    @staticmethod
-    def patch(request, master_id):
+    def patch(self, request, master_id):
         content = {"id": master_id,
                    "name": "Салон",
                    "phone": 9101231232,
@@ -148,8 +142,7 @@ class ClientsView(APIView):
 
     permission_classes = (IsAuthenticated,)
 
-    @staticmethod
-    def get(request, client_id):
+    def get(self, request, client_id):
         u = get_user(request)
         serialized_user = UserSerializer(u)
         content = {"message": "User is authorized",
