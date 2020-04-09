@@ -113,7 +113,7 @@ class MasterAccount(Model):
             except ObjectDoesNotExist:
                 status_code = MasterStatus(code="uv", name="unverified")
                 status_code.save()
-            p = MasterAccount(user=self.user, status_code=status_code)
+            p = MasterAccount(user=self.user, status=status_code)
             Album.objects.bulk_create(
                 [
                     Album(user=self.user, type=AVATAR),
