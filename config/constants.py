@@ -18,10 +18,32 @@ MAX_ALBUM_COUNTS = {
 
 MASTER_ALBUMS = [AVATAR, MASTER_GALLERY, MASTER_WORKPLACE]
 
-DEFAULT_MASTER_FIELDS = [
-            "id", "types",
-            "avatar_album_id", "gallery_album_id",
-            "workplace_album_id", "about_myself",
-            "name", "address",
-            "status"
-        ]
+DEFAULT_FIELDS = {
+    "MasterAccount": {
+        "id", "types", "status",
+        "gallery_album_id", "workplace_album_id", "about_myself",
+        "name", "address",
+    },
+    "Order": {
+        "id", "city", "master_type",
+        "status", "date_created", "request_date_from",
+        "request_date_to", "description", "selection_date",
+        "album_id",
+    },
+    "Reply": {
+        "id", "suggested_time_from", "suggested_time_to",
+        "cost", "comment", "order_id",
+        "master_id", "date_created", "status",
+    }
+}
+DEFAULT_EXCLUDE_FIELDS = {
+    "MasterAccount": {
+        "avatar_album_id"
+    },
+    "Order": {
+        "replies"
+    },
+    "Reply": {
+        "master"
+    }
+}

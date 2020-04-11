@@ -9,7 +9,6 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 
-from config.constants import DEFAULT_MASTER_FIELDS
 from manuals.models import UserStatus
 from users.permissions import IsConfirmed, IsNotBanned
 from users.models import (User, PhoneCode, UserType, MasterAccount,
@@ -71,7 +70,6 @@ class ConfirmationView(APIView):
                 except ObjectDoesNotExist:
                     token = Token.objects.create(user=user)
                 content = {"token": token.key}
-                # Авторизация с 2-ух устройств
                 return Response(content, status=HTTP_200_OK)
 
             except ValidationError as e:
@@ -108,18 +106,19 @@ class MastersView(APIView):
     permission_classes = (IsConfirmed, IsNotBanned)
 
     def get(self, request, master_id):
-        u = get_user(request)
+        user = get_user(request)
         master = get_object_or_404(MasterAccount, id=master_id)
-        fields = request.GET.get("fields")
-        exclude_fields = {"status"}
-        if not fields:
-            fields = DEFAULT_MASTER_FIELDS.copy()
-        if u.type_code.name == "master":
-            if u.masteraccount.id == master_id:
-                exclude_fields.discard("status")
-        serializer = MasterSerializer(master,
-                                      fields=fields,
-                                      exclude_fields=exclude_fields)
+        master_exclude_fields = {"status"}
+        if user.type_code.name == "master":
+            if user.masteraccount.id == master_id:
+                master_exclude_fields.remove("status")
+        serializer = MasterSerializer(
+            master,
+            context={"request": request,
+                     "user": user,
+                     "master_id": master_id,
+                     "master_exclude_fields": master_exclude_fields},
+        )
         return Response(serializer.data, status=HTTP_200_OK)
 
     def patch(self, request, master_id):

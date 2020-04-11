@@ -17,4 +17,4 @@ class DynamicPhotoSerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = Photo
-        fields = "__all__"
+        exclude = ("user", "album")

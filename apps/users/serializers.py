@@ -16,6 +16,15 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class MasterSerializer(DynamicFieldsModelSerializer):
+
+    def __init__(self, *args, **kwargs):
+        context = kwargs.get('context', {})
+        request = context.get('request')
+        fields = request.GET.get('master_fields', None) if request else None
+        kwargs['fields'] = fields
+        kwargs['exclude_fields'] = context.get('master_exclude_fields', set())
+        super(MasterSerializer, self).__init__(*args, **kwargs)
+
     avatar_album_id = SerializerMethodField('get_avatar_album')
     gallery_album_id = SerializerMethodField('get_gallery_album')
     workplace_album_id = SerializerMethodField('get_workplace_album')
