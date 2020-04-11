@@ -1,3 +1,5 @@
+from distutils.util import strtobool
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.utils.datetime_safe import datetime as dt
@@ -9,6 +11,7 @@ from rest_framework.status import (HTTP_200_OK, HTTP_400_BAD_REQUEST,
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
+from core.utils import pagination, string_to_set
 from manuals.models import MasterType, City, ReplyStatus
 from orders.forms import OrderForm, ReplyForm
 from orders.serializers import OrderSerializer, ReplySerializer
@@ -65,42 +68,73 @@ class OrderView(APIView):
         if isinstance(user, dict):
             return Response(user)
 
-        last_updates = request.GET.get("last_updates")
-        order_status = request.GET.get("order_status")
+        order_exclude_fields = set()
+        master_exclude_fields = {'status'}
         limit = request.GET.get("limit")
         offset = request.GET.get("offset")
-        if (MasterAccount.objects.filter(user=user).exists() and
-                not ClientAccount.objects.filter(user=user).exists()):
-            master = MasterAccount.objects.get(user=user)
-            orders = Order.objects.filter(
-                Q(status_code="sm") | Q(reply__master=master)
-            )
+        order_status = request.GET.get("order_status")
+        exist_master_reply = request.GET.get("exist_master_reply")
 
-        elif (ClientAccount.objects.filter(user=user).exists() and
-              not MasterAccount.objects.filter(user=user).exists()):
-            client = ClientAccount.objects.get(user=user)
-            orders = Order.objects.filter(client=client)
+        if user.is_master() and not user.is_client():
+            master = user.masteraccount
+            order_exclude_fields.add("replies_count")
+            master_by_token = request.GET.get("master_by_token")
+            if master_by_token is not None:
+                master_by_token = strtobool(master_by_token)
+            else:
+                master_by_token = True
+            if master_by_token:
+                orders = Order.objects.filter(
+                    Q(
+                        status_code="sm",
+                        master_type__in=master.types.all()
+                    ) |
+                    Q(replies__master=master)
+                )
+            else:
+                order_exclude_fields.add("selection_date")
+                # Select masters
+                exclude_by_replies = Reply.objects.filter(master=master) \
+                                                  .filter(status="sl")
+                orders = Order.objects.filter(
+                    master_type__in=master.types.all()) \
+                    .exclude(replies__in=exclude_by_replies)
+        elif user.is_client() and not user.is_master():
+            master = None
+            orders = Order.objects.filter(client=user.clientaccount)
         else:
             return Response(status=HTTP_400_BAD_REQUEST)
         try:
             if order_status:
-                orders = orders.filter(status_code=order_status)
-            if last_updates:
-                update = dt.utcfromtimestamp(int(last_updates))
-                orders = orders.filter(date_modified__gt=update)
-            if offset:
-                orders = orders[int(offset)::]
-            if limit:
-                orders = orders[:int(limit):]
+                orders = orders.filter(
+                    status_code__in=string_to_set(order_status)
+                )
+            if exist_master_reply is not None:
+                exist_master_reply = not strtobool(exist_master_reply)
+                orders = orders.filter(replies__isnull=exist_master_reply)
+            orders, orders_count = pagination(
+                objects=orders,
+                offset=offset,
+                limit=limit
+            )
         except (ValueError, OSError):
             return Response(status=HTTP_400_BAD_REQUEST)
         except AssertionError as e:
             if str(e) == "Negative indexing is not supported.":
                 return Response(status=HTTP_400_BAD_REQUEST)
-
-        orders = OrderSerializer(orders, many=True)
+        orders = OrderSerializer(
+            orders,
+            many=True,
+            context={
+                'request': request,
+                'order_exclude_fields': order_exclude_fields,
+                'master_exclude_fields': master_exclude_fields,
+                'master': master,
+             },
+                                 )
         try:
-            return Response({"orders": orders.data}, status=HTTP_200_OK)
+            return Response({"orders": orders.data, "count": orders_count},
+                            status=HTTP_200_OK)
         except IntegrityError:
             return Response(status=HTTP_400_BAD_REQUEST)
 
@@ -139,7 +173,6 @@ class OrderByIdView(APIView):
 
 
 class RepliesView(APIView):
-
     permission_classes = (IsAuthenticated, IsConfirmed)
 
     def post(self, request, order_id):

@@ -28,6 +28,12 @@ class User(AbstractUser):
         confirmed_status = UserStatus.objects.get(code="cf")
         return True if self.status_code == confirmed_status else False
 
+    def is_master(self):
+        return hasattr(self, "masteraccount")
+
+    def is_client(self):
+        return hasattr(self, "clientaccount")
+
     def validate_phone(self):
         try:
             int(str(self.phone_number))

@@ -36,7 +36,7 @@ class Order(Model):
 class Reply(Model):
 
     master = ForeignKey(MasterAccount, on_delete=CASCADE)
-    order = ForeignKey(Order, on_delete=CASCADE)
+    order = ForeignKey(Order, on_delete=CASCADE, related_name="replies")
     suggested_time_from = DateTimeField()
     suggested_time_to = DateTimeField()
     cost = IntegerField()
