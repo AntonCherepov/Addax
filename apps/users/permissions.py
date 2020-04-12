@@ -3,6 +3,9 @@ from rest_framework.permissions import BasePermission
 from users.utils import get_user
 
 
+SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS']
+
+
 class IsConfirmed(BasePermission):
     """
     Allows access only to confirmed users.
@@ -28,3 +31,16 @@ class IsNotBanned(BasePermission):
                 return not user.is_banned()
         # user can't be banned if he is not authenticated
         return True
+
+
+class MasterReadOnly(BasePermission):
+    """
+    Allows read only access for masters.
+    """
+
+    def has_permission(self, request, view):
+        if bool(request.user and request.user.is_authenticated):
+            user = get_user(request)
+            if request.method in SAFE_METHODS or not user.is_master():
+                return True
+        return False

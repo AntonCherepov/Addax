@@ -15,24 +15,20 @@ from core.utils import pagination, string_to_set
 from manuals.models import MasterType, City, ReplyStatus
 from orders.forms import OrderForm, ReplyForm
 from orders.serializers import OrderSerializer, ReplySerializer
-from users.permissions import IsConfirmed
-from users.models import ClientAccount, MasterAccount
+from users.permissions import IsConfirmed, MasterReadOnly
+from users.models import MasterAccount
 from users.utils import get_user
 from orders.models import Order, OrderStatus, Reply
 from orders.utils import order_by_id
 
 
 class OrderView(APIView):
-    permission_classes = (IsAuthenticated, IsConfirmed)
+    permission_classes = (IsAuthenticated, IsConfirmed, MasterReadOnly)
 
     def post(self, request):
         user = get_user(request)
         if isinstance(user, dict):
             return Response(status=HTTP_400_BAD_REQUEST)
-        try:
-            client = ClientAccount.objects.get(user=user)
-        except ObjectDoesNotExist:
-            return Response(status=HTTP_403_FORBIDDEN)
         order_form = OrderForm(request.POST)
         if order_form.is_valid():
             city = City.objects.get(id=order_form.cleaned_data['city_id'])
@@ -45,7 +41,7 @@ class OrderView(APIView):
                 order_form.cleaned_data['request_date_to'])
             description = request.POST.get('description')
             order = Order(
-                client=client,
+                client=user.clientaccount,
                 city=city,
                 master_type=master_type_id,
                 request_date_from=request_date_from,
