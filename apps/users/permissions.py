@@ -13,8 +13,7 @@ class IsConfirmed(BasePermission):
             user = get_user(request)
             if user is not None:
                 return user.is_confirmed()
-        else:
-            return False
+        return False
 
 
 class IsNotBanned(BasePermission):
@@ -27,4 +26,5 @@ class IsNotBanned(BasePermission):
             user = get_user(request)
             if user is not None:
                 return not user.is_banned()
+        # user can't be banned if he is not authenticated
         return True
