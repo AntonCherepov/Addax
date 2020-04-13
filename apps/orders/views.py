@@ -11,6 +11,7 @@ from rest_framework.status import (HTTP_200_OK, HTTP_400_BAD_REQUEST,
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
+from albums.utils import save_photos
 from core.utils import pagination, string_to_set
 from manuals.models import MasterType, City, ReplyStatus
 from orders.forms import OrderForm, ReplyForm
@@ -50,10 +51,14 @@ class OrderView(APIView):
                 description=description, )
             try:
                 order.validate()
-            except ValidationError:
-                return Response(status=HTTP_400_BAD_REQUEST)
-            order.create_album()
-            order.save()
+                order.create_album()
+                order.save()
+                files = request.FILES
+                if files:
+                    order.album.validate_post_request(files=files, user=user)
+                    save_photos(files=files, user=user, album=order.album)
+            except ValidationError as e:
+                return Response(str(e), status=HTTP_400_BAD_REQUEST)
             order = OrderSerializer(order)
             return Response({"order": order.data}, status=HTTP_201_CREATED)
         else:
