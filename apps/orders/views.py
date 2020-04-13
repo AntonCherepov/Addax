@@ -55,10 +55,12 @@ class OrderView(APIView):
                 order.save()
                 files = request.FILES
                 if files:
-                    order.album.validate_post_request(files=files, user=user)
+                    order.album.validate_post_request(user=user, files=files)
                     save_photos(files=files, user=user, album=order.album)
-            except ValidationError as e:
-                return Response(str(e), status=HTTP_400_BAD_REQUEST)
+                order.album.is_closed = True
+                order.album.save()
+            except ValidationError:
+                return Response(status=HTTP_400_BAD_REQUEST)
             order = OrderSerializer(order)
             return Response({"order": order.data}, status=HTTP_201_CREATED)
         else:
