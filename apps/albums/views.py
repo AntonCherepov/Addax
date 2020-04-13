@@ -52,7 +52,7 @@ class AlbumView(APIView):
         album = get_object_or_404(Album, id=album_id)
         try:
             user = get_user(request)
-            album.validate_post_request(files=files, user=user)
+            album.validate_post_request(user=user, files=files)
             photos = save_photos(files=files, user=user, album=album)
             serialized_photos = PhotoSerializer(photos, many=True)
             return Response({"photos": serialized_photos.data},
@@ -66,9 +66,13 @@ class PhotoView(APIView):
     def delete(self, request, album_id, photo_id):
         user = get_user(request)
         album = get_object_or_404(Album, id=album_id)
-        photo = get_object_or_404(Photo,
-                                  user=user,
-                                  album=album,
-                                  id=int(photo_id))
-        photo.delete()
-        return Response(status=HTTP_204_NO_CONTENT)
+        try:
+            album.validate_delete_request(user=user, photo_id=photo_id)
+            photo = get_object_or_404(Photo,
+                                      user=user,
+                                      album=album,
+                                      id=photo_id)
+            photo.delete()
+            return Response(status=HTTP_204_NO_CONTENT)
+        except ValidationError:
+            return Response(status=HTTP_400_BAD_REQUEST)
