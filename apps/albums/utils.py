@@ -1,7 +1,7 @@
 from albums.models import Photo
 
 
-def create_photos(files, user, album):
+def save_photos(files, user, album):
     photos = []
     for key in tuple(files):
         Photo.validate(files[key])

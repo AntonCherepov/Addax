@@ -6,7 +6,7 @@ from rest_framework.status import (HTTP_400_BAD_REQUEST, HTTP_200_OK,
                                    HTTP_201_CREATED, HTTP_204_NO_CONTENT)
 from rest_framework.views import APIView
 
-from albums.utils import create_photos
+from albums.utils import save_photos
 from users.permissions import IsConfirmed
 from users.utils import get_user
 from albums.models import Photo, Album
@@ -53,7 +53,7 @@ class AlbumView(APIView):
         try:
             user = get_user(request)
             album.validate_post_request(files=files, user=user)
-            photos = create_photos(files=files, user=user, album=album)
+            photos = save_photos(files=files, user=user, album=album)
             serialized_photos = PhotoSerializer(photos, many=True)
             return Response({"photos": serialized_photos.data},
                             status=HTTP_201_CREATED)
