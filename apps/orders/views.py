@@ -206,7 +206,7 @@ class RepliesView(APIView):
                 return Response(status=HTTP_400_BAD_REQUEST)
             reply.save()
             reply = ReplySerializer(reply)
-            return Response(reply.data, status=HTTP_201_CREATED)
+            return Response({"reply": reply.data}, status=HTTP_201_CREATED)
         else:
             return Response(status=HTTP_400_BAD_REQUEST)
 
