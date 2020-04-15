@@ -38,7 +38,6 @@ DEFAULT_FIELDS = {
 }
 DEFAULT_EXCLUDE_FIELDS = {
     "MasterAccount": {
-        "avatar_album_id"
     },
     "Order": {
         "replies"
