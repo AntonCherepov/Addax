@@ -6,9 +6,11 @@ from core.utils import string_to_set
 
 
 class DynamicFieldsModelSerializer(ModelSerializer):
-    """
-    A ModelSerializer that takes an additional `fields` and `exclude_fields`
-    argument that controls which fields should be displayed.
+    """Controls returned fields by ModelSerializer
+
+    A ModelSerializer that takes an additional `fields` and
+    `exclude_fields` argument that controls which fields should
+    be displayed.
     """
 
     def __init__(self, *args, **kwargs):
@@ -27,6 +29,7 @@ class DynamicFieldsModelSerializer(ModelSerializer):
         try:
             class_name = self.get_objects_class_name(*args)
             if fields is not None:
+                # Add to return default fields
                 if 'default' in fields:
                     fields = fields.union(DEFAULT_FIELDS[class_name])
                     for field_name in DEFAULT_EXCLUDE_FIELDS[class_name]:
@@ -45,7 +48,7 @@ class DynamicFieldsModelSerializer(ModelSerializer):
 
     @staticmethod
     def get_objects_class_name(*args):
-        # If many objects
+        # If query of objects
         if isinstance(args[0], QuerySet):
             objects_name = type(args[0][0]).__name__
         # If one object
