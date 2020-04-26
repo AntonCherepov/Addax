@@ -1,15 +1,18 @@
 from random import randint
 
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.db import DataError
 from rest_framework.generics import get_object_or_404
 
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from rest_framework.status import (HTTP_200_OK, HTTP_400_BAD_REQUEST,
+                                   HTTP_403_FORBIDDEN)
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 
-from manuals.models import UserStatus
+from core.utils import string_to_set
+from manuals.models import UserStatus, MasterType
 from users.permissions import IsConfirmed, IsNotBanned
 from users.models import (User, PhoneCode, UserType, MasterAccount,
                           ClientAccount)
@@ -122,19 +125,38 @@ class MastersView(APIView):
         return Response(serializer.data, status=HTTP_200_OK)
 
     def patch(self, request, master_id):
-        content = {"id": master_id,
-                   "name": "Салон",
-                   "phone": 9101231232,
-                   "address": "Вильгельма пика 4",
-                   "about_myself": "Нет описания",
-                   "master_types": ["Парикмахер", "Педикюр", "Маникюр"],
-                   "status": "active",
-                   "avatar": ["/media/avatar.jpg", "/media/avatar_small.jpg"],
-                   "gallery": [["/media/lol.jpg", "/media/lol_small.jpg"],
-                               ["/media/abc.jpg", "/media/abc_small.jpg"]
-                               ]
-                   }
-        return Response(content, status=HTTP_200_OK)
+        user = get_user(request)
+        if user.is_master() and user.masteraccount.id == master_id:
+            master = get_object_or_404(MasterAccount, id=master_id)
+            name = request.POST.get('name')
+            address = request.POST.get('address')
+            about_myself = request.POST.get('about_myself')
+            master_types = request.POST.get('master_types')
+            try:
+                if name:
+                    master.name = name
+                if address:
+                    master.address = address
+                if about_myself:
+                    master.about_myself = about_myself
+                if master_types:
+                    master_types = string_to_set(master_types)
+                    master_types = [
+                        MasterType.objects.get(id=int(t))
+                        for t
+                        in master_types
+                                    ]
+                    master.save()
+                    master.types.clear()
+                    master.types.add(*master_types)
+                else:
+                    master.save()
+            except (ObjectDoesNotExist, DataError, ValueError):
+                return Response(status=HTTP_400_BAD_REQUEST)
+        else:
+            return Response(status=HTTP_403_FORBIDDEN)
+        serializer = MasterSerializer(master)
+        return Response({"master": serializer.data}, status=HTTP_200_OK)
 
 
 class ClientsView(APIView):
