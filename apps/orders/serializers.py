@@ -19,6 +19,7 @@ class ReplySerializer(DynamicFieldsModelSerializer):
     def __init__(self, *args, **kwargs):
         context = kwargs.get('context', {})
         request = context.get('request')
+        # Try extract reply field set from request
         fields = request.GET.get('reply_fields', None) if request else None
         kwargs['fields'] = fields
         kwargs['exclude_fields'] = context.get('reply_exclude_fields')
@@ -62,6 +63,7 @@ class OrderSerializer(DynamicFieldsModelSerializer):
     def __init__(self, *args, **kwargs):
         context = kwargs.get('context', {})
         request = context.get('request')
+        # Try extract order field set from request
         fields = request.GET.get('order_fields', None) if request else None
         kwargs['fields'] = fields
         kwargs['exclude_fields'] = context.get('order_exclude_fields')

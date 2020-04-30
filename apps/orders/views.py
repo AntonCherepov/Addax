@@ -24,9 +24,15 @@ from orders.utils import order_by_id
 
 
 class OrderView(APIView):
+    """Implementation of interaction with client orders."""
+
     permission_classes = (IsAuthenticated, IsConfirmed, MasterReadOnly)
 
     def post(self, request):
+        """
+        Creates a order for work by the master. Creation of
+        orders is not available for users with a master account.
+        """
         user = get_user(request)
         if isinstance(user, dict):
             return Response(status=HTTP_400_BAD_REQUEST)
@@ -48,11 +54,13 @@ class OrderView(APIView):
                 request_date_from=request_date_from,
                 request_date_to=request_date_to,
                 status_code=status_code,
-                description=description, )
+                description=description,
+            )
             try:
                 order.validate()
                 order.create_album()
                 order.save()
+                # Add uploaded photos to albums
                 files = request.FILES
                 if files:
                     order.album.validate_post_request(user=user, files=files)
@@ -67,6 +75,11 @@ class OrderView(APIView):
             return Response(status=HTTP_400_BAD_REQUEST)
 
     def get(self, request):
+        """
+        Returns (filtered) JSON-serialized orders with selected fields.
+        A set of fields may contain nested replies objects. Available
+        order objects and set of fields depends on user permissions.
+        """
         user = get_user(request)
         if isinstance(user, dict):
             return Response(user)
@@ -78,6 +91,7 @@ class OrderView(APIView):
         order_status = request.GET.get("order_status")
         exist_master_reply = request.GET.get("exist_master_reply")
 
+        # Extract all possible order objects for the current user
         if user.is_master() and not user.is_client():
             master = user.masteraccount
             order_exclude_fields.add("replies_count")
@@ -96,7 +110,9 @@ class OrderView(APIView):
                 )
             else:
                 order_exclude_fields.add("selection_date")
-                # Select masters
+                # Extract orders, where current master reply status
+                # isn't "sl" (selected). It is necessary to indicate
+                # lost orders.
                 exclude_by_replies = Reply.objects.filter(master=master) \
                                                   .filter(status="sl")
                 orders = Order.objects.filter(
@@ -107,6 +123,7 @@ class OrderView(APIView):
             orders = Order.objects.filter(client=user.clientaccount)
         else:
             return Response(status=HTTP_400_BAD_REQUEST)
+        # Filter extracted orders
         try:
             if order_status:
                 orders = orders.filter(
@@ -143,6 +160,7 @@ class OrderView(APIView):
 
 
 class OrderByIdView(APIView):
+    """Implementation of interaction with client order taken by id."""
 
     def patch(self, request, order_id):
         # ToDo
@@ -176,6 +194,11 @@ class OrderByIdView(APIView):
 
 
 class RepliesView(APIView):
+    """
+    Implementation of interaction with
+    master replies taken by order id.
+    """
+
     permission_classes = (IsAuthenticated, IsConfirmed)
 
     def post(self, request, order_id):

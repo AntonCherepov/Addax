@@ -9,6 +9,7 @@ from albums.models import Album
 
 
 class Order(Model):
+    """Order by client."""
 
     master_type = ForeignKey(MasterType, on_delete=SET_NULL, null=True)
     city = ForeignKey(City, on_delete=SET_NULL, null=True)
@@ -34,6 +35,7 @@ class Order(Model):
 
 
 class Reply(Model):
+    """Reply by master."""
 
     master = ForeignKey(MasterAccount, on_delete=CASCADE)
     order = ForeignKey(Order, on_delete=CASCADE, related_name="replies")
