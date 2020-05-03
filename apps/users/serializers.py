@@ -12,7 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("type_code", "status_code")
+        fields = ("type_code", "status")
 
 
 class MasterSerializer(DynamicFieldsModelSerializer):
