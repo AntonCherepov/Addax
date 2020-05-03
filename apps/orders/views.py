@@ -13,14 +13,15 @@ from rest_framework.permissions import IsAuthenticated
 
 from albums.utils import save_photos
 from core.utils import pagination, string_to_set
-from manuals.models import MasterType, City, ReplyStatus
+from manuals.models import MasterType, City
 from orders.forms import OrderForm, ReplyForm
 from orders.serializers import OrderSerializer, ReplySerializer
 from users.permissions import IsConfirmed, MasterReadOnly
 from users.models import MasterAccount
 from users.utils import get_user
-from orders.models import Order, OrderStatus, Reply
+from orders.models import Order, Reply
 from orders.utils import order_by_id
+from orders.constants import SELECTION_OF_MASTERS, CONSIDERED
 
 
 class OrderView(APIView):
@@ -41,7 +42,7 @@ class OrderView(APIView):
             city = City.objects.get(id=order_form.cleaned_data['city_id'])
             master_type_id = MasterType.objects.get(
                 id=order_form.cleaned_data['master_type_id'])
-            status_code = OrderStatus.objects.get(code="sm")
+            status = SELECTION_OF_MASTERS
             request_date_from = dt.utcfromtimestamp(
                 order_form.cleaned_data['request_date_from'])
             request_date_to = dt.utcfromtimestamp(
@@ -53,7 +54,7 @@ class OrderView(APIView):
                 master_type=master_type_id,
                 request_date_from=request_date_from,
                 request_date_to=request_date_to,
-                status_code=status_code,
+                status=status,
                 description=description,
             )
             try:
@@ -103,7 +104,7 @@ class OrderView(APIView):
             if master_by_token:
                 orders = Order.objects.filter(
                     Q(
-                        status_code="sm",
+                        status="sm",
                         master_type__in=master.types.all()
                     ) |
                     Q(replies__master=master)
@@ -127,7 +128,7 @@ class OrderView(APIView):
         try:
             if order_status:
                 orders = orders.filter(
-                    status_code__in=string_to_set(order_status)
+                    status__in=string_to_set(order_status)
                 )
             if exist_master_reply is not None:
                 exist_master_reply = not strtobool(exist_master_reply)
@@ -163,7 +164,6 @@ class OrderByIdView(APIView):
     """Implementation of interaction with client order taken by id."""
 
     def patch(self, request, order_id):
-        # ToDo
         return Response(status=HTTP_200_OK)
 
     def get(self, request, order_id):
@@ -222,7 +222,7 @@ class RepliesView(APIView):
                     master=master,
                     order=order,
                     comment=request.POST.get('comment'),
-                    status=ReplyStatus.objects.get(code="cs")
+                    status=CONSIDERED
                 )
                 reply.validate()
             except ValidationError:

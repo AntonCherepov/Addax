@@ -3,7 +3,8 @@ from django.db.models import (Model, CharField, DateTimeField, IntegerField,
                               ForeignKey, CASCADE, SET_NULL, OneToOneField)
 
 from config.constants import ORDER
-from manuals.models import City, OrderStatus, ReplyStatus
+from manuals.models import City
+from orders.constants import REPLY_STATUS_CHOICES, ORDER_STATUS_CHOICES
 from users.models import MasterType, ClientAccount, MasterAccount
 from albums.models import Album
 
@@ -13,7 +14,7 @@ class Order(Model):
 
     master_type = ForeignKey(MasterType, on_delete=SET_NULL, null=True)
     city = ForeignKey(City, on_delete=SET_NULL, null=True)
-    status_code = ForeignKey(OrderStatus, on_delete=SET_NULL, null=True)
+    status = CharField(choices=ORDER_STATUS_CHOICES, max_length=2)
     date_created = DateTimeField(auto_now_add=True)
     date_modified = DateTimeField(auto_now=True)
     request_date_from = DateTimeField()
@@ -45,7 +46,7 @@ class Reply(Model):
     comment = CharField(max_length=1000, null=True)
     date_created = DateTimeField(auto_now_add=True)
     date_modified = DateTimeField(auto_now=True)
-    status = ForeignKey(ReplyStatus, on_delete=SET_NULL, null=True)
+    status = CharField(choices=REPLY_STATUS_CHOICES, max_length=2)
 
     def validate(self):
         if Reply.objects.filter(master=self.master, order=self.order).exists():
