@@ -1,3 +1,6 @@
+from rest_framework.exceptions import ValidationError
+
+
 def pagination(objects, offset=0, limit=25):
     """
     Custom offset/limit pagination with deleting duplicates
@@ -19,3 +22,7 @@ def pagination(objects, offset=0, limit=25):
 def string_to_set(fields):
     """Parser for parameter values in request"""
     return set(str(fields).split(","))
+
+
+def get_possible_choice_values(possible_choices):
+    return [ch[0] for ch in possible_choices]

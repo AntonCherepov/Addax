@@ -3,30 +3,35 @@ from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import (CharField, Model, CASCADE,
                               IntegerField, DateTimeField, ForeignKey,
-                              OneToOneField, SET_NULL, ManyToManyField,)
+                              OneToOneField, ManyToManyField,)
 
 from config.constants import AVATAR, MASTER_WORKPLACE, MASTER_GALLERY
-from manuals.models import MasterType, UserType, UserStatus, MasterStatus
+from core.utils import get_possible_choice_values
+from users.constants import (USER_TYPE_CHOICES, USER_STATUS_CHOICES,
+                             USER_REGISTERED, USER_BANNED,
+                             USER_CONFIRMED, MASTER_STATUS_CHOICES,
+                             MASTER_UNVERIFIED, MASTER_BANNED)
+from manuals.models import MasterType
 
 
 class User(AbstractUser):
     """ Модель для пользователей """
 
     phone_number = CharField('Номер', null=True, max_length=10, unique=True)
-    type_code = ForeignKey(UserType, on_delete=SET_NULL, null=True)
-    status_code = ForeignKey(UserStatus, on_delete=SET_NULL, null=True)
+    type_code = CharField(choices=USER_TYPE_CHOICES, max_length=2)
+    status = CharField(choices=USER_STATUS_CHOICES, max_length=2)
     date_modified = DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.phone_number
 
     def is_banned(self):
-        banned_status = UserStatus.objects.get(code="bn")
-        return True if self.status_code == banned_status else False
+        banned_status = USER_BANNED
+        return True if self.status == banned_status else False
 
     def is_confirmed(self):
-        confirmed_status = UserStatus.objects.get(code="cf")
-        return True if self.status_code == confirmed_status else False
+        confirmed_status = USER_CONFIRMED
+        return True if self.status == confirmed_status else False
 
     def is_master(self):
         return hasattr(self, "masteraccount")
@@ -50,9 +55,8 @@ class User(AbstractUser):
         except ObjectDoesNotExist:
             pass
 
-    @staticmethod
-    def validate_type_code(type_code):
-        if not UserType.objects.filter(code=type_code).exists():
+    def validate_type_code(self):
+        if self.type_code not in get_possible_choice_values(USER_TYPE_CHOICES):
             raise ValidationError('Incorrect type_code')
 
     def validate_confirmation_request(self):
@@ -62,12 +66,12 @@ class User(AbstractUser):
         elif not users.exists():
             raise ValidationError('User with this phone_number does not '
                                   'exists')
-        elif self.status_code != UserStatus.objects.get(code="rg"):
+        elif self.status != USER_REGISTERED:
             raise ValidationError("User does not need confirmation")
 
-    def validate_registration_request(self, type_code):
+    def validate_registration_request(self):
         self.validate_phone()
-        self.validate_type_code(type_code)
+        self.validate_type_code()
 
     class Meta:
         verbose_name_plural = 'Пользователи'
@@ -104,7 +108,7 @@ class MasterAccount(Model):
     user = OneToOneField(User, on_delete=CASCADE)
     types = ManyToManyField(MasterType)
     about_myself = CharField(null=True, max_length=10000)
-    status = ForeignKey(MasterStatus, on_delete=SET_NULL, null=True)
+    status = CharField(choices=MASTER_STATUS_CHOICES, max_length=2)
     name = CharField(max_length=100)
     address = CharField(max_length=250)
 
@@ -113,13 +117,8 @@ class MasterAccount(Model):
 
         if ClientAccount.objects.filter(user=self.user).exists():
             return False
-        if not MasterAccount.objects.filter(user=self.user).exists():
-            try:
-                status_code = MasterStatus.objects.get(code="uv")
-            except ObjectDoesNotExist:
-                status_code = MasterStatus(code="uv", name="unverified")
-                status_code.save()
-            p = MasterAccount(user=self.user, status=status_code)
+        elif not MasterAccount.objects.filter(user=self.user).exists():
+            p = MasterAccount(user=self.user, status=MASTER_UNVERIFIED)
             Album.objects.bulk_create(
                 [
                     Album(user=self.user, type=AVATAR),

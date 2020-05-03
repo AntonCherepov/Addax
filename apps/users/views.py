@@ -12,10 +12,10 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 
 from core.utils import string_to_set
-from manuals.models import UserStatus, MasterType
+from users.constants import MASTER, CLIENT, USER_CONFIRMED, USER_REGISTERED
+from manuals.models import MasterType
 from users.permissions import IsConfirmed, IsNotBanned
-from users.models import (User, PhoneCode, UserType, MasterAccount,
-                          ClientAccount)
+from users.models import (User, PhoneCode, MasterAccount, ClientAccount)
 from users.utils import get_token, get_user
 from users.forms import RegistrationForm, ConfirmationForm
 from users.serializers import UserSerializer, MasterSerializer
@@ -32,15 +32,16 @@ class RegistrationView(APIView):
             phone_number = registration_form.cleaned_data["phone"]
             type_code = registration_form.cleaned_data["type_code"]
             try:
-                user = User(phone_number=phone_number, username=phone_number)
-                user.validate_registration_request(type_code)
-                user.type_code = UserType.objects.get(code=type_code)
-                user.status_code = UserStatus.objects.get(code="rg")
+                user = User(phone_number=phone_number, username=phone_number,
+                            type_code=type_code)
+                user.validate_registration_request()
+                user.type_code = type_code
+                user.status = USER_REGISTERED
                 user.save()
             except ValidationError as e:
                 if str(e) == "['User with this phone_number already exists']":
                     user = User.objects.get(phone_number=phone_number)
-                    user.status_code = UserStatus.objects.get(code="rg")
+                    user.status = USER_REGISTERED
                     user.save()
                 else:
                     return Response(status=HTTP_400_BAD_REQUEST)
@@ -62,11 +63,11 @@ class ConfirmationView(APIView):
                 user = User.objects.get(phone_number=phone_number)
                 user.validate_confirmation_request()
                 PhoneCode(user=user, code=code).validate()
-                user.status_code = UserStatus.objects.get(code="cf")
+                user.status = USER_CONFIRMED
                 user.save()
-                if user.type_code.code == "m":
+                if user.type_code == MASTER:
                     MasterAccount(user=user).create_account()
-                elif user.type_code.code == "c":
+                elif user.type_code == CLIENT:
                     ClientAccount(user=user).create_account()
                 try:
                     token = Token.objects.get(user=user)

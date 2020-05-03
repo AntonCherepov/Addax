@@ -20,22 +20,6 @@ class MasterStatus(Model):
         return self.code
 
 
-class UserType(Model):
-    code = CharField(max_length=1, unique=True, primary_key=True)
-    name = CharField(max_length=15)
-
-    def __str__(self):
-        return self.code
-
-
-class UserStatus(Model):
-    code = CharField(max_length=2, unique=True, primary_key=True)
-    name = CharField(max_length=15)
-
-    def __str__(self):
-        return self.code
-
-
 class OrderStatus(Model):
     code = CharField(max_length=2, unique=True, primary_key=True)
     name = CharField(max_length=20)

@@ -1,21 +1,14 @@
 from rest_framework.test import APITestCase
-from django.test import TestCase
 
+from rest_framework.status import HTTP_200_OK
 
-from rest_framework.status import HTTP_201_CREATED, HTTP_200_OK
-
-from manuals.models import UserType, UserStatus
 from users.models import PhoneCode
 
 
 class AuthorizationTestCase(APITestCase):
 
     def setUp(self):
-        UserType.objects.bulk_create([UserType(code="c", name="client"),
-                                      UserType(code="m", name="master")])
-        UserStatus.objects.bulk_create([UserStatus(code="rg", name="registered"),
-                                        UserStatus(code="cf", name="confirmed"),
-                                        UserStatus(code="bn", name="banned")])
+        pass
 
     def test_client_auth(self):
         data = {
