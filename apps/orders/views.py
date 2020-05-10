@@ -5,6 +5,7 @@ from django.db import IntegrityError
 from django.utils.datetime_safe import datetime as dt
 from django.db.models import Q
 from django.core.exceptions import ValidationError
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.status import (HTTP_200_OK, HTTP_400_BAD_REQUEST,
                                    HTTP_201_CREATED, HTTP_403_FORBIDDEN)
@@ -21,7 +22,11 @@ from users.models import MasterAccount
 from users.utils import get_user
 from orders.models import Order, Reply
 from orders.utils import order_by_id
-from orders.constants import SELECTION_OF_MASTERS, CONSIDERED
+from orders.constants import (SUCCESSFULLY_COMPLETED, SELECTION_OF_MASTERS,
+                              MASTER_SELECTED, CANCELED_BY_CLIENT,
+                              CANCELED_BY_MASTER, CLIENT_DID_NOT_ARRIVE,
+                              CONSIDERED, REJECTED,
+                              SELECTED)
 
 
 class OrderView(APIView):
@@ -164,7 +169,60 @@ class OrderByIdView(APIView):
     """Implementation of interaction with client order taken by id."""
 
     def patch(self, request, order_id):
-        return Response(status=HTTP_200_OK)
+        user = get_user(request)
+        order = get_object_or_404(Order, id=order_id)
+        try:
+            selected_master = order.replies.get(status=SELECTED).master
+        except ObjectDoesNotExist:
+            selected_master = None
+        order_exclude_fields = {"replies_count"}
+        status_code = request.POST.get("status_code")
+        selection_date = request.POST.get("selection_date")
+        reply_id = request.POST.get("reply_id")
+        try:
+            if status_code:
+                if user.is_client() and order.client == user.clientaccount:
+                    if (status_code == MASTER_SELECTED and
+                            order.status == SELECTION_OF_MASTERS and
+                            reply_id):
+                        reply = order.get_reply_by_id(reply_id)
+                        reply.status = SELECTED
+                        order.status = MASTER_SELECTED
+                        rejected_replies = order.replies.exclude(id=reply_id)
+                        rejected_replies.update(status=REJECTED)
+                        reply.save()
+                    elif (status_code == CANCELED_BY_CLIENT and
+                          order.status in [SELECTION_OF_MASTERS,
+                                           MASTER_SELECTED]):
+                        order.status = CANCELED_BY_CLIENT
+                    else:
+                        return Response(status=HTTP_400_BAD_REQUEST)
+                elif (user.is_master() and
+                      user.masteraccount == selected_master):
+                    possible_statuses = [
+                        CANCELED_BY_MASTER,
+                        CLIENT_DID_NOT_ARRIVE,
+                        SUCCESSFULLY_COMPLETED,
+                                         ]
+                    if (order.status == MASTER_SELECTED and
+                            status_code in possible_statuses):
+                        order.status = status_code
+                    else:
+                        return Response(status=HTTP_400_BAD_REQUEST)
+                else:
+                    return Response(status=HTTP_403_FORBIDDEN)
+            if selection_date:
+                if user.is_master():
+                    if user.masteraccount != selected_master:
+                        return Response(status=HTTP_403_FORBIDDEN)
+                order.update_selection_date(selection_date)
+        except ValidationError:
+            return Response(status=HTTP_400_BAD_REQUEST)
+        order.save()
+        serialized_order = OrderSerializer(order, context={
+            "order_exclude_fields": order_exclude_fields
+        })
+        return Response({"order": serialized_order.data}, status=HTTP_200_OK)
 
     def get(self, request, order_id):
         # ToDo

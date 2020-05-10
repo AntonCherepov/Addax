@@ -1,4 +1,6 @@
-from django.core.exceptions import ValidationError
+from django.utils.datetime_safe import datetime as dt
+
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.models import (Model, CharField, DateTimeField, IntegerField,
                               ForeignKey, CASCADE, SET_NULL, OneToOneField)
 
@@ -33,6 +35,21 @@ class Order(Model):
         a = Album(user=self.client.user, type=ORDER)
         a.save()
         self.album = a
+
+    def update_selection_date(self, new_date):
+        try:
+            new_date = dt.utcfromtimestamp(int(new_date))
+            self.selection_date = new_date
+        except (ValueError, OSError, OverflowError):
+            raise ValidationError('Incorrect value for field "selection_date"')
+
+    def get_reply_by_id(self, reply_id):
+        try:
+            return self.replies.get(id=reply_id)
+        except ObjectDoesNotExist:
+            raise ValidationError(f"No reply with {reply_id=} for this order")
+        except ValueError:
+            raise ValidationError('Incorrect value for field "reply_id"')
 
 
 class Reply(Model):
