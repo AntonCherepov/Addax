@@ -49,3 +49,16 @@ class MasterSerializer(DynamicFieldsModelSerializer):
 
     def get_workplace_album(self, obj):
         return self.get_album(obj, MASTER_WORKPLACE)
+
+
+class UserMasterSerializer(DynamicFieldsModelSerializer):
+    master = SerializerMethodField('get_master_serializer')
+
+    class Meta:
+        model = User
+        fields = ("type_code", "status", "master")
+
+    def get_master_serializer(self, obj):
+        serializer = MasterSerializer(obj.masteraccount,
+                                      context=self.context)
+        return serializer.data

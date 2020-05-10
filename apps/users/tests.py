@@ -1,5 +1,4 @@
 from rest_framework.test import APITestCase
-
 from rest_framework.status import HTTP_200_OK
 
 from users.models import PhoneCode

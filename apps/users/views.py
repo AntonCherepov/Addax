@@ -18,7 +18,8 @@ from users.permissions import IsConfirmed, IsNotBanned
 from users.models import (User, PhoneCode, MasterAccount, ClientAccount)
 from users.utils import get_token, get_user
 from users.forms import RegistrationForm, ConfirmationForm
-from users.serializers import UserSerializer, MasterSerializer
+from users.serializers import UserSerializer, MasterSerializer, \
+    UserMasterSerializer
 
 
 class RegistrationView(APIView):
@@ -100,7 +101,16 @@ class IsValidTokenView(APIView):
 
     def get(self, request):
         u = get_user(request)
-        serialized_user = UserSerializer(u)
+        if u.is_master():
+            master_exclude_fields = {
+                "name", "types", "about_myself", "address",
+                "avatar_album_id", "gallery_album_id", "workplace_album_id",
+            }
+            serialized_user = UserMasterSerializer(u, context={
+                "master_exclude_fields": master_exclude_fields
+            })
+        else:
+            serialized_user = UserSerializer(u)
         content = {"user": serialized_user.data}
         return Response(content)
 
