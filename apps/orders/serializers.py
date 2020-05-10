@@ -1,6 +1,8 @@
 from rest_framework.fields import SerializerMethodField
 
 from core.serializers import DynamicFieldsModelSerializer
+from core.utils import get_status_name
+from orders.constants import ORDER_STATUS_CHOICES, REPLY_STATUS_CHOICES
 from orders.models import Order, Reply
 from users.serializers import MasterSerializer
 
@@ -37,7 +39,8 @@ class ReplySerializer(DynamicFieldsModelSerializer):
         return obj.order.id
 
     def get_status_name(self, obj):
-        return obj.status.name
+        return get_status_name(status_choices=REPLY_STATUS_CHOICES,
+                               status_code=obj.status)
 
 
 class OrderSerializer(DynamicFieldsModelSerializer):
@@ -70,6 +73,7 @@ class OrderSerializer(DynamicFieldsModelSerializer):
         super(OrderSerializer, self).__init__(*args, **kwargs)
 
     def get_replies_serializer(self, obj):
+        # If user is master return only master replies
         if master := self.context.get('master'):
             replies = obj.replies.filter(master=master)
         else:
@@ -89,7 +93,8 @@ class OrderSerializer(DynamicFieldsModelSerializer):
         return obj.master_type.name
 
     def get_status_name(self, obj):
-        return obj.status_code.name
+        return get_status_name(status_choices=ORDER_STATUS_CHOICES,
+                               status_code=obj.status)
 
     def get_album_id(self, obj):
         return obj.album.id

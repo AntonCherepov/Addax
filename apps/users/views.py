@@ -113,7 +113,7 @@ class MastersView(APIView):
         user = get_user(request)
         master = get_object_or_404(MasterAccount, id=master_id)
         master_exclude_fields = {"status"}
-        if user.type_code.name == "master":
+        if user.type_code == MASTER:
             if user.masteraccount.id == master_id:
                 master_exclude_fields.remove("status")
         serializer = MasterSerializer(

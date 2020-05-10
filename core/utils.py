@@ -26,3 +26,10 @@ def string_to_set(fields):
 
 def get_possible_choice_values(possible_choices):
     return [ch[0] for ch in possible_choices]
+
+
+def get_status_name(status_choices, status_code):
+    status_codes = get_possible_choice_values(status_choices)
+    status_code_index = status_codes.index(status_code)
+    status_name = status_choices[status_code_index][1]
+    return status_name
