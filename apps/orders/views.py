@@ -215,7 +215,7 @@ class OrderByIdView(APIView):
         # FixMe
         # Status 404 isn't correct for all situations
         order = get_object_or_404(orders, id=order_id)
-        orders = OrderSerializer(
+        order = OrderSerializer(
             order,
             context={
                 'request': request,
@@ -225,7 +225,7 @@ class OrderByIdView(APIView):
             },
         )
 
-        return Response({"orders": orders.data}, status=HTTP_200_OK)
+        return Response({"order": order.data}, status=HTTP_200_OK)
 
 
 class RepliesView(APIView):
