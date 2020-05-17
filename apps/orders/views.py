@@ -198,30 +198,34 @@ class OrderByIdView(APIView):
         return Response({"order": serialized_order.data}, status=HTTP_200_OK)
 
     def get(self, request, order_id):
-        # ToDo
-        content = {"id": order_id, "town": "Москва",
-                   "masterType": "Парикмахер",
-                   "status": "active", "creationDate": 1579077441,
-                   "requestDateFrom": 1579077452, "requestDateTo": 1579077453,
-                   "description": "", "selectionDate": 1579077453,
-                   "photos": [["/media/lol.jpg", "/media/lol_thumb.jpg"],
-                              ["/media/abc.jpg", "/media/abc_thumb.jpg"]
-                              ],
-                   "responses": [{"id": 5,
-                                  "proposedDateFrom": 123123,
-                                  "proposedDateTo": 123124,
-                                  "comment": "AAA",
-                                  "cost": 7500,
-                                  "creationDate": 123122,
-                                  "status": "Рассматривается!",
-                                  "master": {
-                                      "id": 123,
-                                      "name": "Салон №215",
-                                      "avatar": "/media/lul.jpg",
-                                      "avatar_small": "/media/lul_thumb.jpg"
-                                  }}]}
+        user = get_user(request)
+        if isinstance(user, dict):
+            return Response(user)
 
-        return Response(content, status=HTTP_200_OK)
+        master_exclude_fields = {'status'}
+        order_exclude_fields = set()
+        try:
+            orders, master = get_orders_and_master_for_user(
+                request=request,
+                user=user,
+                order_exclude_fields=order_exclude_fields
+            )
+        except ValidationError:
+            return Response(status=HTTP_400_BAD_REQUEST)
+        # FixMe
+        # Status 404 isn't correct for all situations
+        order = get_object_or_404(orders, id=order_id)
+        orders = OrderSerializer(
+            order,
+            context={
+                'request': request,
+                'order_exclude_fields': order_exclude_fields,
+                'master_exclude_fields': master_exclude_fields,
+                'master': master,
+            },
+        )
+
+        return Response({"orders": orders.data}, status=HTTP_200_OK)
 
 
 class RepliesView(APIView):
