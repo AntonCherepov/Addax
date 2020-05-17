@@ -3,7 +3,6 @@ from distutils.util import strtobool
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.utils.datetime_safe import datetime as dt
-from django.db.models import Q
 from django.core.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -21,7 +20,7 @@ from users.permissions import IsConfirmed, MasterReadOnly
 from users.models import MasterAccount
 from users.utils import get_user
 from orders.models import Order, Reply
-from orders.utils import order_by_id
+from orders.utils import order_by_id, get_orders_and_master_for_user
 from orders.constants import (SUCCESSFULLY_COMPLETED, SELECTION_OF_MASTERS,
                               MASTER_SELECTED, CANCELED_BY_CLIENT,
                               CANCELED_BY_MASTER, CLIENT_DID_NOT_ARRIVE,
@@ -98,37 +97,11 @@ class OrderView(APIView):
         exist_master_reply = request.GET.get("exist_master_reply")
 
         # Extract all possible order objects for the current user
-        if user.is_master() and not user.is_client():
-            master = user.masteraccount
-            order_exclude_fields.add("replies_count")
-            master_by_token = request.GET.get("master_by_token")
-            if master_by_token is not None:
-                master_by_token = strtobool(master_by_token)
-            else:
-                master_by_token = True
-            if master_by_token:
-                orders = Order.objects.filter(
-                    Q(
-                        status="sm",
-                        master_type__in=master.types.all()
-                    ) |
-                    Q(replies__master=master)
-                )
-            else:
-                order_exclude_fields.add("selection_date")
-                # Extract orders, where current master reply status
-                # isn't "sl" (selected). It is necessary to indicate
-                # lost orders.
-                exclude_by_replies = Reply.objects.filter(master=master) \
-                                                  .filter(status="sl")
-                orders = Order.objects.filter(
-                    master_type__in=master.types.all()) \
-                    .exclude(replies__in=exclude_by_replies)
-        elif user.is_client() and not user.is_master():
-            master = None
-            orders = Order.objects.filter(client=user.clientaccount)
-        else:
-            return Response(status=HTTP_400_BAD_REQUEST)
+        orders, master = get_orders_and_master_for_user(
+            request=request,
+            user=user,
+            order_exclude_fields=order_exclude_fields
+        )
         # Filter extracted orders
         try:
             if order_status:
