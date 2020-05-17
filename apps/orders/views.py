@@ -268,19 +268,31 @@ class RepliesView(APIView):
             return Response(status=HTTP_400_BAD_REQUEST)
 
     def get(self, request, order_id):
-        # ToDo
-        content = [{"id": 5,
-                    "order_id": order_id,
-                    "suggested_time_from": 123123,
-                    "suggested_time_to": 123124,
-                    "comment": "AAA",
-                    "cost": 7500,
-                    "creationDate": 123122,
-                    "status": "Рассматривается!",
-                    "master": {
-                        "id": 123,
-                        "name": "Салон №215",
-                        "avatar": "/media/lul.jpg",
-                        "avatar_small": "/media/lul_thumb.jpg"
-                    }}]
-        return Response(content, status=HTTP_200_OK)
+        user = get_user(request)
+        master_exclude_fields = {'status'}
+        try:
+            order, master = get_order_by_id_and_master_for_user(
+                request=request,
+                user=user,
+                order_exclude_fields=set(),
+                order_id=order_id
+            )
+        except ValidationError:
+            return Response(status=HTTP_400_BAD_REQUEST)
+        if user.is_master():
+            replies = order.replies.filter(master=master)
+        else:
+            replies = order.replies
+        replies = ReplySerializer(
+            replies,
+            many=True,
+            context={
+                'request': request,
+                'master_exclude_fields': master_exclude_fields,
+            },
+        )
+        context = {
+            "order_id": order.id,
+            "replies": replies.data,
+                   }
+        return Response(context, status=HTTP_200_OK)
