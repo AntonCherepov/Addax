@@ -20,7 +20,8 @@ from users.permissions import IsConfirmed, MasterReadOnly
 from users.models import MasterAccount
 from users.utils import get_user
 from orders.models import Order, Reply
-from orders.utils import order_by_id, get_orders_and_master_for_user
+from orders.utils import (order_by_id, get_orders_and_master_for_user,
+                          get_order_by_id_and_master_for_user)
 from orders.constants import (SUCCESSFULLY_COMPLETED, SELECTION_OF_MASTERS,
                               MASTER_SELECTED, CANCELED_BY_CLIENT,
                               CANCELED_BY_MASTER, CLIENT_DID_NOT_ARRIVE,
@@ -205,16 +206,14 @@ class OrderByIdView(APIView):
         master_exclude_fields = {'status'}
         order_exclude_fields = set()
         try:
-            orders, master = get_orders_and_master_for_user(
+            order, master = get_order_by_id_and_master_for_user(
                 request=request,
                 user=user,
-                order_exclude_fields=order_exclude_fields
+                order_exclude_fields=order_exclude_fields,
+                order_id=order_id
             )
         except ValidationError:
             return Response(status=HTTP_400_BAD_REQUEST)
-        # FixMe
-        # Status 404 isn't correct for all situations
-        order = get_object_or_404(orders, id=order_id)
         order = OrderSerializer(
             order,
             context={

@@ -2,6 +2,7 @@ from distutils.util import strtobool
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import Q
+from rest_framework.generics import get_object_or_404
 
 from orders.models import Order, Reply
 
@@ -51,3 +52,16 @@ def get_orders_and_master_for_user(request, user, order_exclude_fields):
     else:
         raise ValidationError
     return orders, master
+
+
+def get_order_by_id_and_master_for_user(request, user,
+                                        order_exclude_fields, order_id):
+    orders, master = get_orders_and_master_for_user(
+        request=request,
+        user=user,
+        order_exclude_fields=order_exclude_fields
+    )
+    # FixMe
+    # Status 404 isn't correct for all situations
+    order = get_object_or_404(orders, id=order_id)
+    return order, master
