@@ -15,28 +15,35 @@ from orders.models import Order, Reply
 class OrderUpdateTestCase(APITestCase):
 
     def setUp(self):
-        # Create test users
+
+        # Create test datetime objects
         current_dt = dt.now()
         date_from = current_dt + timedelta(days=1)
         date_to = current_dt + timedelta(days=2)
+
+        # Create test users
+        # Client 1
         self.cl_1 = User.objects.create(phone_number="9000000000",
                                        username="9000000000",
                                        type_code=CLIENT,
                                        status=USER_CONFIRMED)
         ClientAccount(user=self.cl_1).create_account()
         self.client_1_token = Token.objects.create(user=self.cl_1)
+        # Master 1
         master_1 = User.objects.create(phone_number="9000000001",
                                        username="9000000001",
                                        type_code=MASTER,
                                        status=USER_CONFIRMED)
         MasterAccount(user=master_1).create_account()
         self.master_1_token = Token.objects.create(user=master_1)
+        # Master 2
         master_2 = User.objects.create(phone_number="9000000002",
                                        username="9000000002",
                                        type_code=MASTER,
                                        status=USER_CONFIRMED)
         MasterAccount(user=master_2).create_account()
         self.master_2_token = Token.objects.create(user=master_2)
+
         # Create test manuals
         city = City(name="Воронеж")
         city.save()
@@ -49,6 +56,7 @@ class OrderUpdateTestCase(APITestCase):
              MasterType(name="Парикмахер"),
              MasterType(name="Мастер эпиляции")])
         default_master_type = MasterType.objects.get(name="Визажист")
+
         # Create test order and order replies
         order_1 = Order(
             id=1,
