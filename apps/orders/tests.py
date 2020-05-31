@@ -1,4 +1,4 @@
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase, APIClient
@@ -16,6 +16,9 @@ class OrderUpdateTestCase(APITestCase):
 
     def setUp(self):
         # Create test users
+        current_dt = dt.now()
+        date_from = current_dt + timedelta(days=1)
+        date_to = current_dt + timedelta(days=2)
         self.cl_1 = User.objects.create(phone_number="9000000000",
                                        username="9000000000",
                                        type_code=CLIENT,
@@ -48,22 +51,24 @@ class OrderUpdateTestCase(APITestCase):
         default_master_type = MasterType.objects.get(name="Визажист")
         # Create test order and order replies
         order_1 = Order(
+            id=1,
             client=self.cl_1.clientaccount,
             city=city,
             master_type=default_master_type,
-            request_date_from=dt.utcfromtimestamp(1597672650),
-            request_date_to=dt.utcfromtimestamp(1597672654),
+            request_date_from=date_from,
+            request_date_to=date_to,
             status=MASTER_SELECTED,
             description=None,
         )
         order_1.create_album()
         order_1.save()
         order_2 = Order(
+            id=2,
             client=self.cl_1.clientaccount,
             city=city,
             master_type=default_master_type,
-            request_date_from=dt.utcfromtimestamp(1597672650),
-            request_date_to=dt.utcfromtimestamp(1597672654),
+            request_date_from=date_from,
+            request_date_to=date_to,
             status=SELECTION_OF_MASTERS,
             description=None,
         )
@@ -72,8 +77,8 @@ class OrderUpdateTestCase(APITestCase):
         Reply.objects.create(
             id=1,
             cost=100,
-            suggested_time_to=dt.utcfromtimestamp(1597672654),
-            suggested_time_from=dt.utcfromtimestamp(1597672650),
+            suggested_time_to=date_from,
+            suggested_time_from=date_to,
             master=master_1.masteraccount,
             order=order_1,
             comment="",
@@ -82,8 +87,8 @@ class OrderUpdateTestCase(APITestCase):
         Reply.objects.create(
             id=2,
             cost=200,
-            suggested_time_to=dt.utcfromtimestamp(1597672662),
-            suggested_time_from=dt.utcfromtimestamp(1597672651),
+            suggested_time_to=date_from,
+            suggested_time_from=date_to,
             master=master_2.masteraccount,
             order=order_1,
             comment="",
@@ -111,7 +116,7 @@ class OrderUpdateTestCase(APITestCase):
         client.credentials(HTTP_AUTHORIZATION='Token ' +
                                               str(self.master_1_token))
 
-        response = client.patch('/v1/orders/3/', data)
+        response = client.patch('/v1/orders/1/', data)
         order_after_request = Order.objects.get(id=order.id)
         self.assertEqual(response.status_code, HTTP_403_FORBIDDEN)
         self.assertEqual(order_after_request.status,
