@@ -6,7 +6,8 @@ from rest_framework.status import HTTP_200_OK, HTTP_403_FORBIDDEN
 
 from manuals.models import City, MasterType
 from orders.constants import (SELECTION_OF_MASTERS, CONSIDERED, SELECTED,
-                              CANCELED_BY_MASTER, MASTER_SELECTED)
+                              CANCELED_BY_MASTER, MASTER_SELECTED,
+                              CANCELED_BY_CLIENT)
 from users.constants import CLIENT, MASTER, USER_CONFIRMED
 from users.models import MasterAccount, User, ClientAccount
 from orders.models import Order, Reply
@@ -29,6 +30,13 @@ class OrderUpdateTestCase(APITestCase):
                                        status=USER_CONFIRMED)
         ClientAccount(user=self.cl_1).create_account()
         self.client_1_token = Token.objects.create(user=self.cl_1)
+        # Client 2
+        self.cl_2 = User.objects.create(phone_number="9000000003",
+                                       username="9000000003",
+                                       type_code=CLIENT,
+                                       status=USER_CONFIRMED)
+        ClientAccount(user=self.cl_2).create_account()
+        self.client_2_token = Token.objects.create(user=self.cl_2)
         # Master 1
         master_1 = User.objects.create(phone_number="9000000001",
                                        username="9000000001",
@@ -82,7 +90,7 @@ class OrderUpdateTestCase(APITestCase):
         )
         order_2.create_album()
         order_2.save()
-        Reply.objects.create(
+        self.reply_considered = Reply.objects.create(
             id=1,
             cost=100,
             suggested_time_to=date_from,
@@ -92,7 +100,7 @@ class OrderUpdateTestCase(APITestCase):
             comment="",
             status=CONSIDERED
         )
-        Reply.objects.create(
+        self.reply_selected = Reply.objects.create(
             id=2,
             cost=200,
             suggested_time_to=date_from,
@@ -102,8 +110,19 @@ class OrderUpdateTestCase(APITestCase):
             comment="",
             status=SELECTED
         )
+        self.order_2_reply_considered = Reply.objects.create(
+            id=3,
+            cost=200,
+            suggested_time_to=date_from,
+            suggested_time_from=date_to,
+            master=master_2.masteraccount,
+            order=order_2,
+            comment="",
+            status=SELECTED
+        )
 
     def test_cancel_by_master(self):
+        """SubCase 2"""
         order = Order.objects.get(client=self.cl_1.clientaccount,
                                   status=MASTER_SELECTED)
         data = {"status_code": "cm"}
@@ -117,6 +136,7 @@ class OrderUpdateTestCase(APITestCase):
                          CANCELED_BY_MASTER)
 
     def test_cancel_by_wrong_master(self):
+        """SubCase 2 security test 1"""
         order = Order.objects.get(client=self.cl_1.clientaccount,
                                   status=MASTER_SELECTED)
         data = {"status_code": "cm"}
@@ -127,5 +147,62 @@ class OrderUpdateTestCase(APITestCase):
         response = client.patch('/v1/orders/1/', data)
         order_after_request = Order.objects.get(id=order.id)
         self.assertEqual(response.status_code, HTTP_403_FORBIDDEN)
+        self.assertEqual(order_after_request.status,
+                         MASTER_SELECTED)
+
+    def test_cancel_ms_by_client(self):
+        """SubCase 1"""
+        order = Order.objects.get(
+            id=1,
+            client=self.cl_1.clientaccount,
+            status=MASTER_SELECTED
+        )
+        data = {"status_code": "cc"}
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' +
+                                              str(self.client_1_token))
+
+        response = client.patch('/v1/orders/1/', data)
+        order_after_request = Order.objects.get(id=order.id)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(order_after_request.status,
+                         CANCELED_BY_CLIENT)
+
+    def test_cancel_sm_by_client(self):
+        """SubCase 1"""
+        order = Order.objects.get(
+            id=2,
+            client=self.cl_1.clientaccount,
+            status=SELECTION_OF_MASTERS
+        )
+        data = {"status_code": "cc"}
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' +
+                                              str(self.client_1_token))
+
+        response = client.patch('/v1/orders/2/', data)
+        order_after_request = Order.objects.get(id=order.id)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(order_after_request.status,
+                         CANCELED_BY_CLIENT)
+
+    def test_master_select_by_client(self):
+        """SubCase 3"""
+        order = Order.objects.get(
+            id=2,
+            client=self.cl_1.clientaccount,
+            status=SELECTION_OF_MASTERS
+        )
+        data = {
+            "status_code": "ms",
+            "reply_id": str(self.order_2_reply_considered.id)
+        }
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' +
+                                              str(self.client_1_token))
+
+        response = client.patch('/v1/orders/2/', data)
+        order_after_request = Order.objects.get(id=order.id)
+        self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(order_after_request.status,
                          MASTER_SELECTED)
