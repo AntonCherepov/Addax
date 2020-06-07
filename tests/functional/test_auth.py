@@ -24,3 +24,4 @@ class AuthorizationTestCase(APITestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertIn('token', response.data.keys())
 
+
