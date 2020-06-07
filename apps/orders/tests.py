@@ -16,27 +16,19 @@ from orders.models import Order, Reply
 class OrderUpdateTestCase(APITestCase):
 
     def setUp(self):
-
         # Create test datetime objects
         current_dt = dt.now()
         date_from = current_dt + timedelta(days=1)
         date_to = current_dt + timedelta(days=2)
 
         # Create test users
-        # Client 1
-        self.cl_1 = User.objects.create(phone_number="9000000000",
+        # Client
+        self.main_client = User.objects.create(phone_number="9000000000",
                                        username="9000000000",
                                        type_code=CLIENT,
                                        status=USER_CONFIRMED)
-        ClientAccount(user=self.cl_1).create_account()
-        self.client_1_token = Token.objects.create(user=self.cl_1)
-        # Client 2
-        self.cl_2 = User.objects.create(phone_number="9000000003",
-                                       username="9000000003",
-                                       type_code=CLIENT,
-                                       status=USER_CONFIRMED)
-        ClientAccount(user=self.cl_2).create_account()
-        self.client_2_token = Token.objects.create(user=self.cl_2)
+        ClientAccount(user=self.main_client).create_account()
+        self.main_client_token = Token.objects.create(user=self.main_client)
         # Master 1
         master_1 = User.objects.create(phone_number="9000000001",
                                        username="9000000001",
@@ -66,9 +58,9 @@ class OrderUpdateTestCase(APITestCase):
         default_master_type = MasterType.objects.get(name="Визажист")
 
         # Create test order and order replies
-        order_1 = Order(
+        order_ms = Order(
             id=1,
-            client=self.cl_1.clientaccount,
+            client=self.main_client.clientaccount,
             city=city,
             master_type=default_master_type,
             request_date_from=date_from,
@@ -76,11 +68,11 @@ class OrderUpdateTestCase(APITestCase):
             status=MASTER_SELECTED,
             description=None,
         )
-        order_1.create_album()
-        order_1.save()
-        order_2 = Order(
+        order_ms.create_album()
+        order_ms.save()
+        order_sm = Order(
             id=2,
-            client=self.cl_1.clientaccount,
+            client=self.main_client.clientaccount,
             city=city,
             master_type=default_master_type,
             request_date_from=date_from,
@@ -88,15 +80,16 @@ class OrderUpdateTestCase(APITestCase):
             status=SELECTION_OF_MASTERS,
             description=None,
         )
-        order_2.create_album()
-        order_2.save()
+        order_sm.create_album()
+        order_sm.save()
+        # Default Order for Reply is order_ms
         self.reply_considered = Reply.objects.create(
             id=1,
             cost=100,
             suggested_time_to=date_from,
             suggested_time_from=date_to,
             master=master_1.masteraccount,
-            order=order_1,
+            order=order_ms,
             comment="",
             status=CONSIDERED
         )
@@ -106,24 +99,24 @@ class OrderUpdateTestCase(APITestCase):
             suggested_time_to=date_from,
             suggested_time_from=date_to,
             master=master_2.masteraccount,
-            order=order_1,
+            order=order_ms,
             comment="",
             status=SELECTED
         )
-        self.order_2_reply_considered = Reply.objects.create(
+        self.order_sm_reply_considered = Reply.objects.create(
             id=3,
             cost=200,
             suggested_time_to=date_from,
             suggested_time_from=date_to,
             master=master_2.masteraccount,
-            order=order_2,
+            order=order_sm,
             comment="",
-            status=SELECTED
+            status=CONSIDERED
         )
 
     def test_cancel_by_master(self):
         """SubCase 2"""
-        order = Order.objects.get(client=self.cl_1.clientaccount,
+        order = Order.objects.get(client=self.main_client.clientaccount,
                                   status=MASTER_SELECTED)
         data = {"status_code": "cm"}
         client = APIClient()
@@ -137,7 +130,7 @@ class OrderUpdateTestCase(APITestCase):
 
     def test_cancel_by_wrong_master(self):
         """SubCase 2 security test 1"""
-        order = Order.objects.get(client=self.cl_1.clientaccount,
+        order = Order.objects.get(client=self.main_client.clientaccount,
                                   status=MASTER_SELECTED)
         data = {"status_code": "cm"}
         client = APIClient()
@@ -154,13 +147,13 @@ class OrderUpdateTestCase(APITestCase):
         """SubCase 1"""
         order = Order.objects.get(
             id=1,
-            client=self.cl_1.clientaccount,
+            client=self.main_client.clientaccount,
             status=MASTER_SELECTED
         )
         data = {"status_code": "cc"}
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' +
-                                              str(self.client_1_token))
+                                              str(self.main_client_token))
 
         response = client.patch('/v1/orders/1/', data)
         order_after_request = Order.objects.get(id=order.id)
@@ -172,14 +165,13 @@ class OrderUpdateTestCase(APITestCase):
         """SubCase 1"""
         order = Order.objects.get(
             id=2,
-            client=self.cl_1.clientaccount,
+            client=self.main_client.clientaccount,
             status=SELECTION_OF_MASTERS
         )
         data = {"status_code": "cc"}
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' +
-                                              str(self.client_1_token))
-
+                                              str(self.main_client_token))
         response = client.patch('/v1/orders/2/', data)
         order_after_request = Order.objects.get(id=order.id)
         self.assertEqual(response.status_code, HTTP_200_OK)
@@ -190,16 +182,16 @@ class OrderUpdateTestCase(APITestCase):
         """SubCase 3"""
         order = Order.objects.get(
             id=2,
-            client=self.cl_1.clientaccount,
+            client=self.main_client.clientaccount,
             status=SELECTION_OF_MASTERS
         )
         data = {
             "status_code": "ms",
-            "reply_id": str(self.order_2_reply_considered.id)
+            "reply_id": str(self.order_sm_reply_considered.id)
         }
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' +
-                                              str(self.client_1_token))
+                                              str(self.main_client_token))
 
         response = client.patch('/v1/orders/2/', data)
         order_after_request = Order.objects.get(id=order.id)
