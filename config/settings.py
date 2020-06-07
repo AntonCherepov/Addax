@@ -103,6 +103,40 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format': '{asctime} | {levelname} | {message} | {module} | '
+                      '{request}',
+            'datefmt': "%H:%M:%S %Y-%m-%d",
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'main_log': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'logs/info.log',
+            'formatter': 'default'
+        },
+        'error_log': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': 'logs/error.log',
+            'formatter': 'default'
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['main_log', 'error_log'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
 AUTH_USER_MODEL = 'users.User'
 
 LANGUAGE_CODE = 'en-us'
