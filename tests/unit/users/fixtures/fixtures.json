@@ -1,0 +1,281 @@
+[
+  {
+    "model": "users.user",
+    "pk": 1,
+    "fields": {
+      "phone_number": "9000000001",
+      "type_code": "c",
+      "status": "rg",
+      "username": "9000000001",
+
+      "date_joined": "2020-05-17T15:06:11.516Z",
+      "date_modified": "2020-05-17T15:06:11.553Z",
+
+      "is_staff": false,
+      "is_active": true,
+      "email": "",
+      "last_name": "",
+      "first_name": "",
+      "is_superuser": false,
+      "last_login": null,
+      "groups": [],
+      "password": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 2,
+    "fields": {
+      "phone_number": "9000000101",
+      "type_code": "c",
+      "status": "cf",
+      "username": "9000000101",
+
+      "date_joined": "2020-05-17T15:06:11.516Z",
+      "date_modified": "2020-05-17T15:06:11.553Z",
+
+      "is_staff": false,
+      "is_active": true,
+      "email": "",
+      "last_name": "",
+      "first_name": "",
+      "is_superuser": false,
+      "last_login": null,
+      "groups": [],
+      "password": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 3,
+    "fields": {
+      "phone_number": "9000000201",
+      "type_code": "c",
+      "status": "bn",
+      "username": "9000000201",
+
+      "date_joined": "2020-05-17T15:06:11.516Z",
+      "date_modified": "2020-05-17T15:06:11.553Z",
+
+      "is_staff": false,
+      "is_active": true,
+      "email": "",
+      "last_name": "",
+      "first_name": "",
+      "is_superuser": false,
+      "last_login": null,
+      "groups": [],
+      "password": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 2001,
+    "fields": {
+      "phone_number": "9000002001",
+      "type_code": "c",
+      "status": "bn",
+      "username": "9000002001",
+
+      "date_joined": "2020-05-17T15:06:11.516Z",
+      "date_modified": "2020-05-17T15:06:11.553Z",
+
+      "is_staff": false,
+      "is_active": true,
+      "email": "",
+      "last_name": "",
+      "first_name": "",
+      "is_superuser": false,
+      "last_login": null,
+      "groups": [],
+      "password": "",
+      "user_permissions": []
+    }
+  },
+
+  {
+    "model": "authtoken.token",
+    "pk": "7e1ed3d9da18713e41134351c21fdbc0b03de411",
+    "fields": {
+      "user": 2001,
+      "created": "2020-06-07T10:15:41.295Z"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 2002,
+    "fields": {
+      "phone_number": "9000002002",
+      "type_code": "c",
+      "status": "bn",
+      "username": "9000002002",
+
+      "date_joined": "2020-05-17T15:06:11.516Z",
+      "date_modified": "2020-05-17T15:06:11.553Z",
+
+      "is_staff": false,
+      "is_active": true,
+      "email": "",
+      "last_name": "",
+      "first_name": "",
+      "is_superuser": false,
+      "last_login": null,
+      "groups": [],
+      "password": "",
+      "user_permissions": []
+    }
+  },
+
+  {
+    "model": "authtoken.token",
+    "pk": "4455183bec207836fa1622720da18bb5807b74f6",
+    "fields": {
+      "user": 2002,
+      "created": "2020-06-07T10:15:41.295Z"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 2003,
+    "fields": {
+      "phone_number": "9000002003",
+      "type_code": "c",
+      "status": "bn",
+      "username": "9000002003",
+
+      "date_joined": "2020-05-17T15:06:11.516Z",
+      "date_modified": "2020-05-17T15:06:11.553Z",
+
+      "is_staff": false,
+      "is_active": true,
+      "email": "",
+      "last_name": "",
+      "first_name": "",
+      "is_superuser": false,
+      "last_login": null,
+      "groups": [],
+      "password": "",
+      "user_permissions": []
+    }
+  },
+
+  {
+    "model": "authtoken.token",
+    "pk": "d2c2427d62b6b966f4ed09f977054ed369281b62",
+    "fields": {
+      "user": 2003,
+      "created": "2020-06-07T10:15:41.295Z"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 1001,
+    "fields": {
+      "phone_number": "9000001001",
+      "type_code": "m",
+      "status": "rg",
+      "username": "9000001001",
+
+      "date_joined": "2020-05-17T15:06:11.516Z",
+      "date_modified": "2020-05-17T15:06:11.553Z",
+
+      "is_staff": false,
+      "is_active": true,
+      "email": "",
+      "last_name": "",
+      "first_name": "",
+      "is_superuser": false,
+      "last_login": null,
+      "groups": [],
+      "password": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.masteraccount",
+    "pk": 1,
+    "fields": {
+      "user": 1001,
+      "status": "uv",
+      "name": "",
+      "address": "",
+      "types": [],
+      "about_myself": null
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 1101,
+    "fields": {
+      "phone_number": "9000001101",
+      "type_code": "m",
+      "status": "cf",
+      "username": "9000001101",
+
+      "date_joined": "2020-05-17T15:06:11.516Z",
+      "date_modified": "2020-05-17T15:06:11.553Z",
+
+      "is_staff": false,
+      "is_active": true,
+      "email": "",
+      "last_name": "",
+      "first_name": "",
+      "is_superuser": false,
+      "last_login": null,
+      "groups": [],
+      "password": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.masteraccount",
+    "pk": 2,
+    "fields": {
+      "user": 1101,
+      "status": "uv",
+      "name": "",
+      "address": "",
+      "types": [],
+      "about_myself": null
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 1201,
+    "fields": {
+      "phone_number": "9000002001",
+      "type_code": "m",
+      "status": "bn",
+      "username": "9000002001",
+
+      "date_joined": "2020-05-17T15:06:11.516Z",
+      "date_modified": "2020-05-17T15:06:11.553Z",
+
+      "is_staff": false,
+      "is_active": true,
+      "email": "",
+      "last_name": "",
+      "first_name": "",
+      "is_superuser": false,
+      "last_login": null,
+      "groups": [],
+      "password": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.masteraccount",
+    "pk": 3,
+    "fields": {
+      "user": 1201,
+      "status": "uv",
+      "name": "",
+      "address": "",
+      "types": [],
+      "about_myself": null
+    }
+  }
+]
