@@ -1,3 +1,4 @@
+import json
 from random import randint
 
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -11,7 +12,6 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 
-from core.utils import string_to_set
 from users.constants import MASTER, CLIENT, USER_CONFIRMED, USER_REGISTERED
 from manuals.models import MasterType
 from users.permissions import IsConfirmed, IsNotBanned
@@ -151,7 +151,7 @@ class MastersView(APIView):
                 if about_myself:
                     master.about_myself = about_myself
                 if master_types:
-                    master_types = string_to_set(master_types)
+                    master_types = set(json.loads(master_types))
                     master_types = [
                         MasterType.objects.get(id=int(t))
                         for t
