@@ -33,3 +33,7 @@ def get_status_name(status_choices, status_code):
     status_code_index = status_codes.index(status_code)
     status_name = status_choices[status_code_index][1]
     return status_name
+
+
+def extract_exception_text(err):
+    return str(err)[2:-2]

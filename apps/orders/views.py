@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
 from albums.utils import save_photos
-from core.utils import pagination, string_to_set
+from core.utils import pagination, string_to_set, extract_exception_text
 from manuals.models import MasterType, City
 from orders.forms import OrderForm, ReplyForm
 from orders.serializers import OrderSerializer, ReplySerializer
@@ -73,12 +73,16 @@ class OrderView(APIView):
                     save_photos(files=files, user=user, album=order.album)
                 order.album.is_closed = True
                 order.album.save()
-            except ValidationError:
-                return Response(status=HTTP_400_BAD_REQUEST)
+            except ValidationError as e:
+                return Response({"detail": extract_exception_text(e)},
+                                status=HTTP_400_BAD_REQUEST)
             order = OrderSerializer(order)
             return Response({"order": order.data}, status=HTTP_201_CREATED)
         else:
-            return Response(status=HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": f"Form is not valid: {order_form.errors}"},
+                status=HTTP_400_BAD_REQUEST
+            )
 
     def get(self, request):
         """
@@ -121,7 +125,8 @@ class OrderView(APIView):
             return Response(status=HTTP_400_BAD_REQUEST)
         except AssertionError as e:
             if str(e) == "Negative indexing is not supported.":
-                return Response(status=HTTP_400_BAD_REQUEST)
+                return Response({"detail": extract_exception_text(e)},
+                                status=HTTP_400_BAD_REQUEST)
         orders = OrderSerializer(
             orders,
             many=True,
@@ -170,7 +175,10 @@ class OrderByIdView(APIView):
                                            MASTER_SELECTED]):
                         order.status = CANCELED_BY_CLIENT
                     else:
-                        return Response(status=HTTP_400_BAD_REQUEST)
+                        return Response({"detail": "This client does not have "
+                                                   "the ability to complete "
+                                                   "this action."},
+                                        status=HTTP_400_BAD_REQUEST)
                 elif (user.is_master() and
                       user.masteraccount == selected_master):
                     possible_statuses = [
@@ -190,8 +198,9 @@ class OrderByIdView(APIView):
                     if user.masteraccount != selected_master:
                         return Response(status=HTTP_403_FORBIDDEN)
                 order.update_selection_date(selection_date)
-        except ValidationError:
-            return Response(status=HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            return Response({"detail": extract_exception_text(e)},
+                            status=HTTP_400_BAD_REQUEST)
         order.save()
         serialized_order = OrderSerializer(order, context={
             "order_exclude_fields": order_exclude_fields
@@ -212,8 +221,9 @@ class OrderByIdView(APIView):
                 order_exclude_fields=order_exclude_fields,
                 order_id=order_id
             )
-        except ValidationError:
-            return Response(status=HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            return Response({"detail": extract_exception_text(e)},
+                            status=HTTP_400_BAD_REQUEST)
         order = OrderSerializer(
             order,
             context={
@@ -259,13 +269,17 @@ class RepliesView(APIView):
                     status=CONSIDERED
                 )
                 reply.validate()
-            except ValidationError:
-                return Response(status=HTTP_400_BAD_REQUEST)
+            except ValidationError as e:
+                return Response({"detail": extract_exception_text(e)},
+                                status=HTTP_400_BAD_REQUEST)
             reply.save()
             reply = ReplySerializer(reply)
             return Response({"reply": reply.data}, status=HTTP_201_CREATED)
         else:
-            return Response(status=HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": f"Form is not valid: {reply_form.errors}"},
+                status=HTTP_400_BAD_REQUEST
+            )
 
     def get(self, request, order_id):
         user = get_user(request)
@@ -277,8 +291,9 @@ class RepliesView(APIView):
                 order_exclude_fields=set(),
                 order_id=order_id
             )
-        except ValidationError:
-            return Response(status=HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            return Response({"detail": extract_exception_text(e)},
+                            status=HTTP_400_BAD_REQUEST)
         if user.is_master():
             replies = order.replies.filter(master=master)
         else:

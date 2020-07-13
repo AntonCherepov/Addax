@@ -7,6 +7,7 @@ from rest_framework.status import (HTTP_400_BAD_REQUEST, HTTP_200_OK,
 from rest_framework.views import APIView
 
 from albums.utils import save_photos
+from core.utils import extract_exception_text
 from users.permissions import IsConfirmed
 from users.utils import get_user
 from albums.models import Photo, Album
@@ -43,7 +44,8 @@ class AlbumView(APIView):
             return Response(str(e), status=HTTP_400_BAD_REQUEST)
         except AssertionError as e:
             if str(e) == "Negative indexing is not supported.":
-                return Response(status=HTTP_400_BAD_REQUEST)
+                return Response({"detail": extract_exception_text(e)},
+                                status=HTTP_400_BAD_REQUEST)
         return Response({"photos": photos.data, "count": count},
                         status=HTTP_200_OK)
 
@@ -57,8 +59,9 @@ class AlbumView(APIView):
             serialized_photos = PhotoSerializer(photos, many=True)
             return Response({"photos": serialized_photos.data},
                             status=HTTP_201_CREATED)
-        except ValidationError:
-            return Response(status=HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            return Response({"detail": extract_exception_text(e)},
+                            status=HTTP_400_BAD_REQUEST)
 
 
 class PhotoView(APIView):
@@ -74,5 +77,6 @@ class PhotoView(APIView):
                                       id=photo_id)
             photo.delete()
             return Response(status=HTTP_204_NO_CONTENT)
-        except ValidationError:
-            return Response(status=HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            return Response({"detail": extract_exception_text(e)},
+                            status=HTTP_400_BAD_REQUEST)

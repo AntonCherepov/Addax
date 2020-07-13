@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 
+from core.utils import extract_exception_text
 from users.constants import MASTER, CLIENT, USER_CONFIRMED, USER_REGISTERED
 from manuals.models import MasterType
 from users.permissions import IsConfirmed, IsNotBanned
@@ -40,17 +41,21 @@ class RegistrationView(APIView):
                 user.status = USER_REGISTERED
                 user.save()
             except ValidationError as e:
-                if str(e) == "['User with this phone_number already exists']":
+                e = extract_exception_text(e)
+                if e == "User with this phone_number already exists":
                     user = User.objects.get(phone_number=phone_number)
                     user.status = USER_REGISTERED
                     user.save()
                 else:
-                    return Response(status=HTTP_400_BAD_REQUEST)
+                    return Response({"detail": e},
+                                    status=HTTP_400_BAD_REQUEST)
             c = PhoneCode(user=user, code=random_code)
             c.save()
             return Response(status=HTTP_200_OK)
         else:
-            return Response(status=HTTP_400_BAD_REQUEST)
+            return Response({"detail": f"Form is not valid: "
+                                       f"{registration_form.errors}"},
+                            status=HTTP_400_BAD_REQUEST)
 
 
 class ConfirmationView(APIView):
@@ -78,9 +83,12 @@ class ConfirmationView(APIView):
                 return Response(content, status=HTTP_200_OK)
 
             except ValidationError as e:
-                return Response(status=HTTP_400_BAD_REQUEST)
+                e = extract_exception_text(e)
+                return Response({"detail": e}, status=HTTP_400_BAD_REQUEST)
         else:
-            return Response(status=HTTP_400_BAD_REQUEST)
+            return Response({"detail": f"Form is not valid: "
+                                       f"{confirmation_form.errors}"},
+                            status=HTTP_400_BAD_REQUEST)
 
 
 class LogoutView(APIView):
