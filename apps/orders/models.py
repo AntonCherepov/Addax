@@ -72,5 +72,6 @@ class Reply(Model):
             raise ValidationError("Field \"suggested_time_from\" can't be more"
                                   "or equal than field "
                                   "\"suggested_time_from\".")
-        if len(self.comment) > 1000:
-            raise ValidationError("Field \"comment\" is too long.")
+        if self.comment:
+            if len(self.comment) > 1000:
+                raise ValidationError("Field \"comment\" is too long.")
