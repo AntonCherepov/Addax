@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'orders.apps.OrdersConfig',
     'manuals.apps.ManualsConfig',
     'albums.apps.AlbumsConfig',
+    'feedbacks.apps.FeedbacksConfig',
 
 ]
 

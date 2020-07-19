@@ -9,7 +9,8 @@ urlpatterns = [
     path(v+'users/', include('users.urls')),
     path(v+'orders/', include('orders.urls')),
     path(v+'manuals/', include('manuals.urls')),
-    path(v+'albums/', include('albums.urls'),)
+    path(v+'albums/', include('albums.urls')),
+    path('v2/', include('feedbacks.urls')),
 ]
 
 if settings.DEBUG:
