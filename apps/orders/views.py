@@ -114,8 +114,10 @@ class OrderView(APIView):
                     status__in=string_to_set(order_status)
                 )
             if exist_master_reply is not None:
-                exist_master_reply = not strtobool(exist_master_reply)
-                orders = orders.filter(replies__isnull=exist_master_reply)
+                if strtobool(exist_master_reply):
+                    orders = orders.filter(replies__master=master)
+                else:
+                    orders = orders.exclude(replies__master=master)
             orders, orders_count = pagination(
                 objects=orders,
                 offset=offset,
