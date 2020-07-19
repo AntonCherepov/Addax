@@ -99,7 +99,6 @@ class OrderView(APIView):
         limit = request.GET.get("limit")
         offset = request.GET.get("offset")
         order_status = request.GET.get("order_status")
-        exist_master_reply = request.GET.get("exist_master_reply")
 
         # Extract all possible order objects for the current user
         orders, master = get_orders_and_master_for_user(
@@ -113,11 +112,6 @@ class OrderView(APIView):
                 orders = orders.filter(
                     status__in=string_to_set(order_status)
                 )
-            if exist_master_reply is not None:
-                if strtobool(exist_master_reply):
-                    orders = orders.filter(replies__master=master)
-                else:
-                    orders = orders.exclude(replies__master=master)
             orders, orders_count = pagination(
                 objects=orders,
                 offset=offset,

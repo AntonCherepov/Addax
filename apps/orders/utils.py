@@ -19,6 +19,7 @@ def order_by_id(order_id=None):
 
 
 def get_orders_and_master_for_user(request, user, order_exclude_fields):
+    exist_master_reply = request.GET.get("exist_master_reply")
     # FixMe
     if user.is_master() and not user.is_client():
         master = user.masteraccount
@@ -46,9 +47,17 @@ def get_orders_and_master_for_user(request, user, order_exclude_fields):
             orders = Order.objects.filter(
                 master_type__in=master.types.all()) \
                 .exclude(replies__in=exclude_by_replies)
+        if exist_master_reply is not None:
+            if strtobool(exist_master_reply):
+                orders = orders.filter(replies__master=master)
+            else:
+                orders = orders.exclude(replies__master=master)
     elif user.is_client() and not user.is_master():
         master = None
         orders = Order.objects.filter(client=user.clientaccount)
+        if exist_master_reply is not None:
+            exist_master_reply = not strtobool(exist_master_reply)
+            orders = orders.filter(replies__isnull=exist_master_reply)
     else:
         raise ValidationError
     return orders, master
