@@ -4,6 +4,7 @@ from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, \
     HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 from rest_framework.views import APIView
 
+from core.decorators import get_user_decorator
 from core.utils import pagination
 from feedbacks.forms import FeedBackForm
 from feedbacks.models import FeedBack
@@ -11,8 +12,6 @@ from feedbacks.serializers import FeedBackSerializer
 from orders.constants import SUCCESSFULLY_COMPLETED
 from orders.models import Order
 from users.models import MasterAccount
-
-from users.utils import get_user
 
 
 class FeedBackView(APIView):
@@ -33,8 +32,8 @@ class FeedBackView(APIView):
         else:
             return Response(status=HTTP_404_NOT_FOUND)
 
-    def post(self, request, master_id):
-        user = get_user(request)
+    @get_user_decorator
+    def post(self, request, user, master_id):
         if user.is_client() and not user.is_master():
             form = FeedBackForm(request.POST)
             if form.is_valid():

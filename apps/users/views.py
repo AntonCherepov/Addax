@@ -12,12 +12,14 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 
+from core.decorators import get_user_decorator
+from core.exceptions import RequestUserError
 from core.utils import extract_exception_text
 from users.constants import MASTER, CLIENT, USER_CONFIRMED, USER_REGISTERED
 from manuals.models import MasterType
 from users.permissions import IsConfirmed, IsNotBanned
-from users.models import (User, PhoneCode, MasterAccount, ClientAccount)
-from users.utils import get_token, get_user
+from users.models import User, PhoneCode, MasterAccount, ClientAccount
+from users.utils import get_token
 from users.forms import RegistrationForm, ConfirmationForm
 from users.serializers import UserSerializer, MasterSerializer, \
     UserMasterSerializer
@@ -96,29 +98,30 @@ class LogoutView(APIView):
     permission_classes = (IsAuthenticated, IsConfirmed)
 
     def post(self, request):
-        token = get_token(request)
-        if isinstance(token, dict):
-            return Response(token)
-        token.delete()
-        return Response(status=HTTP_200_OK)
+        try:
+            token = get_token(request)
+            token.delete()
+            return Response(status=HTTP_200_OK)
+        except RequestUserError as e:
+            return Response({"detail": str(e)}, status=HTTP_400_BAD_REQUEST)
 
 
 class IsValidTokenView(APIView):
 
     permission_classes = (IsAuthenticated, IsConfirmed)
 
-    def get(self, request):
-        u = get_user(request)
-        if u.is_master():
+    @get_user_decorator
+    def get(self, request, user):
+        if user.is_master():
             master_exclude_fields = {
                 "name", "types", "about_myself", "address",
                 "avatar_album_id", "gallery_album_id", "workplace_album_id",
             }
-            serialized_user = UserMasterSerializer(u, context={
+            serialized_user = UserMasterSerializer(user, context={
                 "master_exclude_fields": master_exclude_fields
             })
         else:
-            serialized_user = UserSerializer(u)
+            serialized_user = UserSerializer(user)
         content = {"user": serialized_user.data}
         return Response(content)
 
@@ -127,8 +130,8 @@ class MastersView(APIView):
 
     permission_classes = (IsConfirmed, IsNotBanned)
 
-    def get(self, request, master_id):
-        user = get_user(request)
+    @get_user_decorator
+    def get(self, request, user, master_id):
         master = get_object_or_404(MasterAccount, id=master_id)
         master_exclude_fields = {"status"}
         if user.type_code == MASTER:
@@ -143,8 +146,8 @@ class MastersView(APIView):
         )
         return Response(serializer.data, status=HTTP_200_OK)
 
-    def patch(self, request, master_id):
-        user = get_user(request)
+    @get_user_decorator
+    def patch(self, request, user, master_id):
         if user.is_master() and user.masteraccount.id == master_id:
             master = get_object_or_404(MasterAccount, id=master_id)
             name = request.POST.get('name')
@@ -182,9 +185,9 @@ class ClientsView(APIView):
 
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, client_id):
-        u = get_user(request)
-        serialized_user = UserSerializer(u)
+    @get_user_decorator
+    def get(self, request, user, client_id):
+        serialized_user = UserSerializer(user)
         content = {"message": "User is authorized",
                    "user": serialized_user.data}
         return Response(content)

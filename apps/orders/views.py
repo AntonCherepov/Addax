@@ -1,5 +1,3 @@
-from distutils.util import strtobool
-
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.utils.datetime_safe import datetime as dt
@@ -12,13 +10,13 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
 from albums.utils import save_photos
+from core.decorators import get_user_decorator
 from core.utils import pagination, string_to_set, extract_exception_text
 from manuals.models import MasterType, City
 from orders.forms import OrderForm, ReplyForm
 from orders.serializers import OrderSerializer, ReplySerializer
 from users.permissions import IsConfirmed, MasterReadOnly
 from users.models import MasterAccount
-from users.utils import get_user
 from orders.models import Order, Reply
 from orders.utils import (order_by_id, get_orders_and_master_for_user,
                           get_order_by_id_and_master_for_user)
@@ -34,14 +32,12 @@ class OrderView(APIView):
 
     permission_classes = (IsAuthenticated, IsConfirmed, MasterReadOnly)
 
-    def post(self, request):
+    @get_user_decorator
+    def post(self, request, user):
         """
         Creates a order for work by the master. Creation of
         orders is not available for users with a master account.
         """
-        user = get_user(request)
-        if isinstance(user, dict):
-            return Response(status=HTTP_400_BAD_REQUEST)
         order_form = OrderForm(request.POST)
         if order_form.is_valid():
             city = City.objects.get(id=order_form.cleaned_data['city_id'])
@@ -84,15 +80,13 @@ class OrderView(APIView):
                 status=HTTP_400_BAD_REQUEST
             )
 
-    def get(self, request):
+    @get_user_decorator
+    def get(self, request, user):
         """
         Returns (filtered) JSON-serialized orders with selected fields.
         A set of fields may contain nested replies objects. Available
         order objects and set of fields depends on user permissions.
         """
-        user = get_user(request)
-        if isinstance(user, dict):
-            return Response(user)
 
         order_exclude_fields = set()
         master_exclude_fields = {'status'}
@@ -143,8 +137,8 @@ class OrderView(APIView):
 class OrderByIdView(APIView):
     """Implementation of interaction with client order taken by id."""
 
-    def patch(self, request, order_id):
-        user = get_user(request)
+    @get_user_decorator
+    def patch(self, request, user, order_id):
         order = get_object_or_404(Order, id=order_id)
         try:
             selected_master = order.replies.get(status=SELECTED).master
@@ -203,11 +197,8 @@ class OrderByIdView(APIView):
         })
         return Response({"order": serialized_order.data}, status=HTTP_200_OK)
 
-    def get(self, request, order_id):
-        user = get_user(request)
-        if isinstance(user, dict):
-            return Response(user)
-
+    @get_user_decorator
+    def get(self, request, user, order_id):
         master_exclude_fields = {'status'}
         order_exclude_fields = set()
         try:
@@ -241,8 +232,8 @@ class RepliesView(APIView):
 
     permission_classes = (IsAuthenticated, IsConfirmed)
 
-    def post(self, request, order_id):
-        user = get_user(request)
+    @get_user_decorator
+    def post(self, request, user, order_id):
         try:
             master = MasterAccount.objects.get(user=user)
         except ObjectDoesNotExist:
@@ -277,8 +268,8 @@ class RepliesView(APIView):
                 status=HTTP_400_BAD_REQUEST
             )
 
-    def get(self, request, order_id):
-        user = get_user(request)
+    @get_user_decorator
+    def get(self, request, user, order_id):
         master_exclude_fields = {'status'}
         try:
             order, master = get_order_by_id_and_master_for_user(

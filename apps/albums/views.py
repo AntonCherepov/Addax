@@ -7,9 +7,9 @@ from rest_framework.status import (HTTP_400_BAD_REQUEST, HTTP_200_OK,
 from rest_framework.views import APIView
 
 from albums.utils import save_photos
+from core.decorators import get_user_decorator
 from core.utils import extract_exception_text
 from users.permissions import IsConfirmed
-from users.utils import get_user
 from albums.models import Photo, Album
 from albums.serializers import DynamicPhotoSerializer, PhotoSerializer
 
@@ -49,11 +49,11 @@ class AlbumView(APIView):
         return Response({"photos": photos.data, "count": count},
                         status=HTTP_200_OK)
 
-    def post(self, request, album_id):
+    @get_user_decorator
+    def post(self, request, user, album_id):
         files = request.FILES
         album = get_object_or_404(Album, id=album_id)
         try:
-            user = get_user(request)
             album.validate_post_request(user=user, files=files)
             photos = save_photos(files=files, user=user, album=album)
             serialized_photos = PhotoSerializer(photos, many=True)
@@ -66,8 +66,8 @@ class AlbumView(APIView):
 
 class PhotoView(APIView):
 
-    def delete(self, request, album_id, photo_id):
-        user = get_user(request)
+    @get_user_decorator
+    def delete(self, request, user, album_id, photo_id):
         album = get_object_or_404(Album, id=album_id)
         try:
             album.validate_delete_request(user=user, photo_id=photo_id)
