@@ -17,9 +17,10 @@ from users.serializers import MasterSerializer
 
 class FeedBackView(APIView):
 
-    def get(self, request, master_id):
+    def get(self, request):
+        master_id = request.POST.get('master_id')
         master = get_object_or_404(MasterAccount, id=master_id)
-        feedbacks  = FeedBack.objects.filter(master=master)
+        feedbacks = FeedBack.objects.filter(master=master)
         if feedbacks:
             limit = request.GET.get("limit")
             offset = request.GET.get("offset")
@@ -34,36 +35,45 @@ class FeedBackView(APIView):
             return Response(status=HTTP_404_NOT_FOUND)
 
     @get_user_decorator
-    def post(self, request, user, master_id):
+    def post(self, request, user):
         if user.is_client() and not user.is_master():
-            form = FeedBackForm(request.POST)
-            if form.is_valid():
-                master = get_object_or_404(MasterAccount, id=master_id)
-                complete_orders = Order.objects.filter(
-                    replies__master=master,
-                    replies__status=SUCCESSFULLY_COMPLETED,
-                    client=user.clientaccount)
-                feedbacks = FeedBack.objects.filter(master=master,
-                                                    client=user.clientaccount)
-                if complete_orders and not feedbacks:
-                    comment = request.POST.get("comment")
-                    feedback = FeedBack.objects.create(
-                        nickname=form.cleaned_data["nickname"],
-                        comment=comment,
-                        rating=form.cleaned_data["rating"],
+            if master_id := request.POST.get('master_id'):
+                form = FeedBackForm(request.POST)
+                if form.is_valid():
+                    master = get_object_or_404(MasterAccount, id=master_id)
+                    complete_orders = Order.objects.filter(
+                        replies__master=master,
+                        replies__status=SUCCESSFULLY_COMPLETED,
+                        client=user.clientaccount)
+                    feedbacks = FeedBack.objects.filter(
                         master=master,
                         client=user.clientaccount
                     )
-                    serialized = FeedBackSerializer(feedback)
-                    return Response({"feedback": serialized.data},
-                                    status=HTTP_201_CREATED)
+                    if complete_orders and not feedbacks:
+                        comment = request.POST.get("comment")
+                        feedback = FeedBack.objects.create(
+                            nickname=form.cleaned_data["nickname"],
+                            comment=comment,
+                            rating=form.cleaned_data["rating"],
+                            master=master,
+                            client=user.clientaccount
+                        )
+                        serialized = FeedBackSerializer(feedback)
+                        return Response({"feedback": serialized.data},
+                                        status=HTTP_201_CREATED)
+                    else:
+                        return Response(status=HTTP_400_BAD_REQUEST)
                 else:
-                    return Response(status=HTTP_400_BAD_REQUEST)
+                    return Response(
+                        {"detail": f"Form is not valid: {form.errors}"},
+                        status=HTTP_400_BAD_REQUEST
+                    )
             else:
                 return Response(
-                    {"detail": f"Form is not valid: {form.errors}"},
-                    status=HTTP_400_BAD_REQUEST
-                )
+                    {"detail": "Field 'master_id' not found."},
+                    status=HTTP_400_BAD_REQUEST)
+        else:
+            return Response(status=HTTP_403_FORBIDDEN)
 
 
 class NotificationView(APIView):
