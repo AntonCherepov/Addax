@@ -12,6 +12,7 @@ urlpatterns = [
     path(v+'manuals/', include('manuals.urls')),
     path(v+'albums/', include('albums.urls')),
     path(v2+'feedbacks/', include('feedbacks.urls')),
+    path(v2+'balance/', include('balance.urls')),
 ]
 
 if settings.DEBUG:

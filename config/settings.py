@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'manuals.apps.ManualsConfig',
     'albums.apps.AlbumsConfig',
     'feedbacks.apps.FeedbacksConfig',
+    'balance.apps.BalanceConfig',
 
 ]
 
