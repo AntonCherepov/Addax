@@ -34,3 +34,13 @@ class MasterReadOnly(BasePermission):
     def has_permission(self, request, user, view):
         return True if request.method in SAFE_METHODS or not user.is_master() \
                     else False
+
+
+class IsMaster(BasePermission):
+    """
+    Allows access only for masters.
+    """
+
+    @get_user_decorator
+    def has_permission(self, request, user, view):
+        return user.is_master()
