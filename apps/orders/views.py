@@ -15,11 +15,12 @@ from core.utils import pagination, string_to_set, extract_exception_text
 from manuals.models import MasterType, City
 from orders.forms import OrderForm, ReplyForm
 from orders.serializers import OrderSerializer, ReplySerializer
-from users.permissions import IsConfirmed, MasterReadOnly
+from users.permissions import IsConfirmed, MasterReadOnly, IsBalancePositive
 from users.models import MasterAccount
 from orders.models import Order, Reply
 from orders.utils import (order_by_id, get_orders_and_master_for_user,
-                          get_order_by_id_and_master_for_user)
+                          get_order_by_id_and_master_for_user,
+                          change_balance_on_complete_order)
 from orders.constants import (SUCCESSFULLY_COMPLETED, SELECTION_OF_MASTERS,
                               MASTER_SELECTED, CANCELED_BY_CLIENT,
                               CANCELED_BY_MASTER, CLIENT_DID_NOT_ARRIVE,
@@ -30,7 +31,8 @@ from orders.constants import (SUCCESSFULLY_COMPLETED, SELECTION_OF_MASTERS,
 class OrderView(APIView):
     """Implementation of interaction with client orders."""
 
-    permission_classes = (IsAuthenticated, IsConfirmed, MasterReadOnly)
+    permission_classes = (IsAuthenticated, IsConfirmed,
+                          MasterReadOnly, IsBalancePositive)
 
     @get_user_decorator
     def post(self, request, user):
@@ -137,6 +139,8 @@ class OrderView(APIView):
 class OrderByIdView(APIView):
     """Implementation of interaction with client order taken by id."""
 
+    permission_classes = (IsBalancePositive,)
+
     @get_user_decorator
     def patch(self, request, user, order_id):
         order = get_object_or_404(Order, id=order_id)
@@ -179,6 +183,8 @@ class OrderByIdView(APIView):
                     if (order.status == MASTER_SELECTED and
                             status_code in possible_statuses):
                         order.status = status_code
+                        if order.status == SUCCESSFULLY_COMPLETED:
+                            change_balance_on_complete_order(order, user)
                     else:
                         return Response(status=HTTP_400_BAD_REQUEST)
                 else:
@@ -230,7 +236,7 @@ class RepliesView(APIView):
     master replies taken by order id.
     """
 
-    permission_classes = (IsAuthenticated, IsConfirmed)
+    permission_classes = (IsAuthenticated, IsConfirmed, IsBalancePositive)
 
     @get_user_decorator
     def post(self, request, user, order_id):

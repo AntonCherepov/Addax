@@ -4,6 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import Q
 from rest_framework.generics import get_object_or_404
 
+from balance.constants import OPERATION_ORDER_COMPLETE
 from orders.models import Order, Reply
 
 
@@ -74,3 +75,10 @@ def get_order_by_id_and_master_for_user(request, user,
     # Status 404 isn't correct for all situations
     order = get_object_or_404(orders, id=order_id)
     return order, master
+
+
+def change_balance_on_complete_order(order, user):
+    reply = order.replies.get(master=user.masteraccount)
+    difference_value = int(-reply.cost / 10)
+    user.balance.change_value(difference_value,
+                              OPERATION_ORDER_COMPLETE)

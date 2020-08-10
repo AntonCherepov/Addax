@@ -10,7 +10,7 @@ from core.utils import get_possible_choice_values
 from users.constants import (USER_TYPE_CHOICES, USER_STATUS_CHOICES,
                              USER_REGISTERED, USER_BANNED,
                              USER_CONFIRMED, MASTER_STATUS_CHOICES,
-                             MASTER_UNVERIFIED, MASTER_BANNED)
+                             MASTER_UNVERIFIED)
 from manuals.models import MasterType
 
 
@@ -114,6 +114,7 @@ class MasterAccount(Model):
 
     def create_account(self):
         from albums.models import Album
+        from balance.models import Balance
 
         if ClientAccount.objects.filter(user=self.user).exists():
             return False
@@ -126,6 +127,7 @@ class MasterAccount(Model):
                     Album(user=self.user, type=MASTER_GALLERY),
                 ]
             )
+            Balance.objects.create(user=self.user, current_value=0)
             p.save()
 
 

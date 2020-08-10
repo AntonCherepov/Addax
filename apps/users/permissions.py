@@ -25,6 +25,16 @@ class IsNotBanned(BasePermission):
         return not user.is_banned() if user is not None else True
 
 
+class IsBalancePositive(BasePermission):
+    """
+    Allows access only to for
+    users with positive balance.
+    """
+    @get_user_decorator
+    def has_permission(self, request, user, view):
+        return user.balance.is_positive()
+
+
 class MasterReadOnly(BasePermission):
     """
     Allows read only access for masters.
