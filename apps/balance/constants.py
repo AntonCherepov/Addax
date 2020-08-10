@@ -1,0 +1,2 @@
+OPERATION_BALANCE_REPLENISHMENT = 'Balance replenishment'
+OPERATION_ORDER_COMPLETE = 'Order complete'
