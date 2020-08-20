@@ -54,3 +54,12 @@ class IsMaster(BasePermission):
     @get_user_decorator
     def has_permission(self, request, user, view):
         return user.is_master()
+
+
+class IsClient(BasePermission):
+    """
+    Allows access only for clients.
+    """
+    @get_user_decorator
+    def has_permission(self, request, user, view):
+        return user.is_client()
