@@ -18,7 +18,7 @@ from users.serializers import MasterSerializer
 class FeedBackView(APIView):
 
     def get(self, request):
-        master_id = request.POST.get('master_id')
+        master_id = request.GET.get('master_id')
         master = get_object_or_404(MasterAccount, id=master_id)
         feedbacks = FeedBack.objects.filter(master=master)
         if feedbacks:
@@ -32,7 +32,7 @@ class FeedBackView(APIView):
             }
             return Response(response_body, status=HTTP_200_OK)
         else:
-            return Response(status=HTTP_404_NOT_FOUND)
+            return Response({"detail": "No feedbacks."}, status=HTTP_200_OK)
 
     @get_user_decorator
     def post(self, request, user):
