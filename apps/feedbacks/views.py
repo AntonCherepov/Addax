@@ -41,10 +41,15 @@ class FeedBackView(APIView):
             if master_id := request.POST.get('master_id'):
                 form = FeedBackForm(request.POST)
                 if form.is_valid():
-                    master = get_object_or_404(MasterAccount, id=master_id)
+                    try:
+                        master = get_object_or_404(MasterAccount, id=master_id)
+                    except ValueError:
+                        return Response(
+                            {"detail": "master_id must be integer."},
+                            HTTP_400_BAD_REQUEST)
                     complete_orders = Order.objects.filter(
                         replies__master=master,
-                        replies__status=SUCCESSFULLY_COMPLETED,
+                        replies__status=SELECTED,
                         client=user.clientaccount)
                     feedbacks = FeedBack.objects.filter(
                         master=master,
