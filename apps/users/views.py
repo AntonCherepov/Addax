@@ -21,8 +21,8 @@ from users.permissions import IsConfirmed, IsNotBanned
 from users.models import User, PhoneCode, MasterAccount, ClientAccount
 from users.utils import get_token
 from users.forms import RegistrationForm, ConfirmationForm
-from users.serializers import UserSerializer, MasterSerializer, \
-    UserMasterSerializer
+from users.serializers import (UserSerializer, MasterSerializer,
+                               UserMasterSerializer, UserClientSerializer)
 
 
 class RegistrationView(APIView):
@@ -121,7 +121,7 @@ class IsValidTokenView(APIView):
                 "master_exclude_fields": master_exclude_fields
             })
         else:
-            serialized_user = UserSerializer(user)
+            serialized_user = UserClientSerializer(user)
         content = {"user": serialized_user.data}
         return Response(content)
 
@@ -173,8 +173,9 @@ class MastersView(APIView):
                     master.types.add(*master_types)
                 else:
                     master.save()
-            except (ObjectDoesNotExist, DataError, ValueError):
-                return Response(status=HTTP_400_BAD_REQUEST)
+            except (ObjectDoesNotExist, DataError, ValueError) as e:
+                return Response({"detail": str(e)},
+                                status=HTTP_400_BAD_REQUEST)
         else:
             return Response(status=HTTP_403_FORBIDDEN)
         serializer = MasterSerializer(master)

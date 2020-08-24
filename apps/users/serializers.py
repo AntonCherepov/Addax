@@ -62,3 +62,15 @@ class UserMasterSerializer(DynamicFieldsModelSerializer):
         serializer = MasterSerializer(obj.masteraccount,
                                       context=self.context)
         return serializer.data
+
+
+class UserClientSerializer(serializers.ModelSerializer):
+
+    client_id = SerializerMethodField('get_client_id')
+
+    class Meta:
+        model = User
+        fields = ("type_code", "status", "client_id")
+
+    def get_client_id(self, obj):
+        return obj.clientaccount.id
