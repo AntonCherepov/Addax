@@ -32,7 +32,9 @@ class IsBalancePositive(BasePermission):
     """
     @get_user_decorator
     def has_permission(self, request, user, view):
-        return user.balance.is_positive()
+        if user.is_master():
+            return user.balance.is_positive()
+        return True
 
 
 class MasterReadOnly(BasePermission):
