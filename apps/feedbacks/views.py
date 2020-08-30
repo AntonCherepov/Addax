@@ -22,18 +22,15 @@ class FeedBackView(APIView):
         master_id = request.GET.get('master_id')
         master = get_object_or_404(MasterAccount, id=master_id)
         feedbacks = FeedBack.objects.filter(master=master)
-        if feedbacks:
-            limit = request.GET.get("limit")
-            offset = request.GET.get("offset")
-            feedbacks, count = pagination(feedbacks, offset, limit)
-            feedbacks = FeedBackSerializer(feedbacks, many=True)
-            response_body = {
-                "feedbacks": feedbacks.data,
-                "count": count,
-            }
-            return Response(response_body, status=HTTP_200_OK)
-        else:
-            return Response({"detail": "No feedbacks."}, status=HTTP_200_OK)
+        limit = request.GET.get("limit")
+        offset = request.GET.get("offset")
+        feedbacks, count = pagination(feedbacks, offset, limit)
+        feedbacks = FeedBackSerializer(feedbacks, many=True)
+        response_body = {
+            "feedbacks": feedbacks.data,
+            "count": count,
+        }
+        return Response(response_body, status=HTTP_200_OK)
 
     @get_user_decorator
     def post(self, request, user):
