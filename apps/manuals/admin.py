@@ -5,12 +5,12 @@ from manuals.models import MasterType, City
 
 class MasterTypeAdmin(ModelAdmin):
 
-    list_display = ("id", "name")
+    list_display = ('id', 'name')
 
 
 class CityAdmin(ModelAdmin):
 
-    list_display = ("id", "name")
+    list_display = ('id', 'name')
 
 
 site.register(MasterType, MasterTypeAdmin)

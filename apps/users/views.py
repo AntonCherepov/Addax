@@ -33,8 +33,8 @@ class RegistrationView(APIView):
         registration_form = RegistrationForm(request.POST)
         random_code = str(randint(100000, 999999))
         if registration_form.is_valid():
-            phone_number = registration_form.cleaned_data["phone"]
-            type_code = registration_form.cleaned_data["type_code"]
+            phone_number = registration_form.cleaned_data['phone']
+            type_code = registration_form.cleaned_data['type_code']
             try:
                 user = User(phone_number=phone_number, username=phone_number,
                             type_code=type_code)
@@ -44,19 +44,19 @@ class RegistrationView(APIView):
                 user.save()
             except ValidationError as e:
                 e = extract_exception_text(e)
-                if e == "User with this phone_number already exists":
+                if e == 'User with this phone_number already exists':
                     user = User.objects.get(phone_number=phone_number)
                     user.status = USER_REGISTERED
                     user.save()
                 else:
-                    return Response({"detail": e},
+                    return Response({'detail': e},
                                     status=HTTP_400_BAD_REQUEST)
             c = PhoneCode(user=user, code=random_code)
             c.save()
             return Response(status=HTTP_200_OK)
         else:
-            return Response({"detail": f"Form is not valid: "
-                                       f"{registration_form.errors}"},
+            return Response({'detail': f'Form is not valid: '
+                                       f'{registration_form.errors}'},
                             status=HTTP_400_BAD_REQUEST)
 
 
@@ -65,8 +65,8 @@ class ConfirmationView(APIView):
     def post(self, request):
         confirmation_form = ConfirmationForm(request.POST)
         if confirmation_form.is_valid():
-            phone_number = confirmation_form.cleaned_data["phone"]
-            code = confirmation_form.cleaned_data["code"]
+            phone_number = confirmation_form.cleaned_data['phone']
+            code = confirmation_form.cleaned_data['code']
             try:
                 user = User.objects.get(phone_number=phone_number)
                 user.validate_confirmation_request()
@@ -81,15 +81,15 @@ class ConfirmationView(APIView):
                     token = Token.objects.get(user=user)
                 except ObjectDoesNotExist:
                     token = Token.objects.create(user=user)
-                content = {"token": token.key}
+                content = {'token': token.key}
                 return Response(content, status=HTTP_200_OK)
 
             except ValidationError as e:
                 e = extract_exception_text(e)
-                return Response({"detail": e}, status=HTTP_400_BAD_REQUEST)
+                return Response({'detail': e}, status=HTTP_400_BAD_REQUEST)
         else:
-            return Response({"detail": f"Form is not valid: "
-                                       f"{confirmation_form.errors}"},
+            return Response({'detail': f'Form is not valid: '
+                                       f'{confirmation_form.errors}'},
                             status=HTTP_400_BAD_REQUEST)
 
 
@@ -103,7 +103,7 @@ class LogoutView(APIView):
             token.delete()
             return Response(status=HTTP_200_OK)
         except RequestUserError as e:
-            return Response({"detail": str(e)}, status=HTTP_400_BAD_REQUEST)
+            return Response({'detail': str(e)}, status=HTTP_400_BAD_REQUEST)
 
 
 class IsValidTokenView(APIView):
@@ -114,15 +114,15 @@ class IsValidTokenView(APIView):
     def get(self, request, user):
         if user.is_master():
             master_exclude_fields = {
-                "name", "types", "about_myself", "address",
-                "avatar_album_id", "gallery_album_id", "workplace_album_id",
+                'name', 'types', 'about_myself', 'address',
+                'avatar_album_id', 'gallery_album_id', 'workplace_album_id',
             }
             serialized_user = UserMasterSerializer(user, context={
-                "master_exclude_fields": master_exclude_fields
+                'master_exclude_fields': master_exclude_fields
             })
         else:
             serialized_user = UserClientSerializer(user)
-        content = {"user": serialized_user.data}
+        content = {'user': serialized_user.data}
         return Response(content)
 
 
@@ -133,16 +133,16 @@ class MastersView(APIView):
     @get_user_decorator
     def get(self, request, user, master_id):
         master = get_object_or_404(MasterAccount, id=master_id)
-        master_exclude_fields = {"status"}
+        master_exclude_fields = {'status'}
         if user.type_code == MASTER:
             if user.masteraccount.id == master_id:
-                master_exclude_fields.remove("status")
+                master_exclude_fields.remove('status')
         serializer = MasterSerializer(
             master,
-            context={"request": request,
-                     "user": user,
-                     "master_id": master_id,
-                     "master_exclude_fields": master_exclude_fields},
+            context={'request': request,
+                     'user': user,
+                     'master_id': master_id,
+                     'master_exclude_fields': master_exclude_fields},
         )
         return Response(serializer.data, status=HTTP_200_OK)
 
@@ -174,12 +174,12 @@ class MastersView(APIView):
                 else:
                     master.save()
             except (ObjectDoesNotExist, DataError, ValueError) as e:
-                return Response({"detail": str(e)},
+                return Response({'detail': str(e)},
                                 status=HTTP_400_BAD_REQUEST)
         else:
             return Response(status=HTTP_403_FORBIDDEN)
         serializer = MasterSerializer(master)
-        return Response({"master": serializer.data}, status=HTTP_200_OK)
+        return Response({'master': serializer.data}, status=HTTP_200_OK)
 
 
 class ClientsView(APIView):
@@ -189,6 +189,6 @@ class ClientsView(APIView):
     @get_user_decorator
     def get(self, request, user, client_id):
         serialized_user = UserSerializer(user)
-        content = {"message": "User is authorized",
-                   "user": serialized_user.data}
+        content = {'message': 'User is authorized',
+                   'user': serialized_user.data}
         return Response(content)

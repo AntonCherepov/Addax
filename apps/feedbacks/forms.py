@@ -1,6 +1,6 @@
 from time import time
 
-from django.forms import IntegerField, CharField, ModelForm
+from django.forms import ModelForm
 
 from feedbacks.models import FeedBack
 
@@ -11,4 +11,4 @@ class FeedBackForm(ModelForm):
 
     class Meta:
         model = FeedBack
-        exclude = ("client", "master", "date_created", "comment")
+        exclude = ('client', 'master', 'date_created', 'comment')

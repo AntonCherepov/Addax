@@ -7,7 +7,7 @@ from users.models import User
 
 def get_token(request) -> Token:
     try:
-        token_raw = request.META["HTTP_AUTHORIZATION"].split(" ")[1]
+        token_raw = request.META['HTTP_AUTHORIZATION'].split(' ')[1]
         token = Token.objects.get(key=token_raw)
     except ObjectDoesNotExist:
         raise RequestUserError('Token does not exist.')

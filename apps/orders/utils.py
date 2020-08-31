@@ -14,18 +14,18 @@ def order_by_id(order_id=None):
             order = Order.objects.get(id=order_id)
             return order
         except ObjectDoesNotExist:
-            raise ValidationError(f"No order by {order_id = }")
+            raise ValidationError(f'No order by {order_id = }')
     else:
-        raise ValidationError(f"Invalid order_id")
+        raise ValidationError(f'Invalid order_id')
 
 
 def get_orders_and_master_for_user(request, user, order_exclude_fields):
-    exist_master_reply = request.GET.get("exist_master_reply")
+    exist_master_reply = request.GET.get('exist_master_reply')
     # FixMe
     if user.is_master() and not user.is_client():
         master = user.masteraccount
-        order_exclude_fields.add("replies_count")
-        master_by_token = request.GET.get("master_by_token")
+        order_exclude_fields.add('replies_count')
+        master_by_token = request.GET.get('master_by_token')
         if master_by_token is not None:
             master_by_token = strtobool(master_by_token)
         else:
@@ -33,18 +33,18 @@ def get_orders_and_master_for_user(request, user, order_exclude_fields):
         if master_by_token:
             orders = Order.objects.filter(
                 Q(
-                    status="sm",
+                    status='sm',
                     master_type__in=master.types.all()
                 ) |
                 Q(replies__master=master)
             )
         else:
-            order_exclude_fields.add("selection_date")
+            order_exclude_fields.add('selection_date')
             # Extract orders, where current master reply status
             # isn't "sl" (selected). It is necessary to indicate
             # lost orders.
             exclude_by_replies = Reply.objects.filter(master=master) \
-                .filter(status="sl")
+                .filter(status='sl')
             orders = Order.objects.filter(
                 master_type__in=master.types.all()) \
                 .exclude(replies__in=exclude_by_replies)

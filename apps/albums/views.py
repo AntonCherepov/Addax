@@ -20,10 +20,10 @@ class AlbumView(APIView):
     def get(self, request, album_id):
         photos = Photo.objects.filter(album=album_id)
         count = photos.count()
-        limit = request.GET.get("limit")
-        offset = request.GET.get("offset")
-        fields = request.GET.get("fields")
-        exclude_fields = {"date_created"}
+        limit = request.GET.get('limit')
+        offset = request.GET.get('offset')
+        fields = request.GET.get('fields')
+        exclude_fields = {'date_created'}
         try:
             if offset:
                 photos = photos[int(offset)::]
@@ -43,10 +43,10 @@ class AlbumView(APIView):
         except (ValueError, OSError, TypeError) as e:
             return Response(str(e), status=HTTP_400_BAD_REQUEST)
         except AssertionError as e:
-            if str(e) == "Negative indexing is not supported.":
-                return Response({"detail": extract_exception_text(e)},
+            if str(e) == 'Negative indexing is not supported.':
+                return Response({'detail': extract_exception_text(e)},
                                 status=HTTP_400_BAD_REQUEST)
-        return Response({"photos": photos.data, "count": count},
+        return Response({'photos': photos.data, 'count': count},
                         status=HTTP_200_OK)
 
     @get_user_decorator
@@ -57,10 +57,10 @@ class AlbumView(APIView):
             album.validate_post_request(user=user, files=files)
             photos = save_photos(files=files, user=user, album=album)
             serialized_photos = PhotoSerializer(photos, many=True)
-            return Response({"photos": serialized_photos.data},
+            return Response({'photos': serialized_photos.data},
                             status=HTTP_201_CREATED)
         except ValidationError as e:
-            return Response({"detail": extract_exception_text(e)},
+            return Response({'detail': extract_exception_text(e)},
                             status=HTTP_400_BAD_REQUEST)
 
 
@@ -78,5 +78,5 @@ class PhotoView(APIView):
             photo.delete()
             return Response(status=HTTP_204_NO_CONTENT)
         except ValidationError as e:
-            return Response({"detail": extract_exception_text(e)},
+            return Response({'detail': extract_exception_text(e)},
                             status=HTTP_400_BAD_REQUEST)

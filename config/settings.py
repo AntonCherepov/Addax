@@ -112,7 +112,7 @@ LOGGING = {
         'default': {
             'format': '{asctime} | {levelname} | {message} | {module} | '
                       '{request}',
-            'datefmt': "%H:%M:%S %Y-%m-%d",
+            'datefmt': '%H:%M:%S %Y-%m-%d',
             'style': '{',
         },
     },

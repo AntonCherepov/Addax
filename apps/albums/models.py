@@ -22,25 +22,25 @@ class Album(Model):
     def validate_count(self, files):
         files_count = len(files)
         if files_count < 1:
-            raise ValidationError("No photos in request.")
+            raise ValidationError('No photos in request.')
         photos = Photo.objects.filter(album=self)
         count = photos.count() + files_count
         if count > MAX_ALBUM_COUNTS[self.type]:
-            raise ValidationError("Too many photos.")
+            raise ValidationError('Too many photos.')
 
     def validate_able_to_change(self):
         if self.is_closed:
-            raise ValidationError("Album is not editable.")
+            raise ValidationError('Album is not editable.')
 
     def validate_album_exist(self, user):
         if not Album.objects.filter(id=self.id, user=user).exists():
-            raise ValidationError("No album with this album_id for current "
-                                  "user.")
+            raise ValidationError('No album with this album_id for current '
+                                  'user.')
 
     def validate_photo_exist(self, user, photo_id):
         if not Photo.objects.filter(id=photo_id, user=user).exists():
-            raise ValidationError("No photo with this photo_id for current "
-                                  "user.")
+            raise ValidationError('No photo with this photo_id for current '
+                                  'user.')
 
     def validate_post_request(self, user, files):
         self.validate_able_to_change()
@@ -58,7 +58,7 @@ class Photo(Model):
     user = ForeignKey(User, on_delete=CASCADE)
     album = ForeignKey(Album, on_delete=CASCADE, null=True)
     date_created = DateTimeField(auto_now_add=True)
-    image = ImageField(upload_to="photo_full")
+    image = ImageField(upload_to='photo_full')
     image_thumb = ImageSpecField(source='image',
                                  processors=[ResizeToFit(width=600,
                                                          height=600)],
@@ -70,8 +70,8 @@ class Photo(Model):
         try:
             img = Image.open(file)
             if max(img.size) > 5000:
-                raise ValidationError("Image is too large")
+                raise ValidationError('Image is too large')
         except UnidentifiedImageError:
-            raise ValidationError("File is not image")
+            raise ValidationError('File is not image')
         except DecompressionBombError:
-            raise ValidationError("Image size exceeds limit")
+            raise ValidationError('Image size exceeds limit')

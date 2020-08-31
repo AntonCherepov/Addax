@@ -7,11 +7,11 @@ class CitySerializer(ModelSerializer):
 
     class Meta:
         model = City
-        fields = "__all__"
+        fields = '__all__'
 
 
 class MasterTypeSerializer(ModelSerializer):
 
     class Meta:
         model = City
-        fields = "__all__"
+        fields = '__all__'

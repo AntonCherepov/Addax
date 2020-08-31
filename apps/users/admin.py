@@ -5,12 +5,12 @@ from users.models import User, PhoneCode
 
 class UserAdmin(ModelAdmin):
 
-    list_display = ("id", "phone_number", "date_joined")
+    list_display = ('id', 'phone_number', 'date_joined')
 
 
 class PhoneCodeAdmin(ModelAdmin):
 
-    list_display = ("id", "user_id", "code", "query_time")
+    list_display = ('id', 'user_id', 'code', 'query_time')
 
 
 site.register(User, UserAdmin)

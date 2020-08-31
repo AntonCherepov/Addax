@@ -34,17 +34,17 @@ class User(AbstractUser):
         return True if self.status == confirmed_status else False
 
     def is_master(self):
-        return hasattr(self, "masteraccount")
+        return hasattr(self, 'masteraccount')
 
     def is_client(self):
-        return hasattr(self, "clientaccount")
+        return hasattr(self, 'clientaccount')
 
     def validate_phone(self):
         try:
             int(str(self.phone_number))
         except ValueError:
             raise ValidationError('phone_number is not a number')
-        if str(self.phone_number)[0] != "9":
+        if str(self.phone_number)[0] != '9':
             raise ValidationError('Incorrect phone_number')
         try:
             if user := User.objects.get(phone_number=self.phone_number):
@@ -67,7 +67,7 @@ class User(AbstractUser):
             raise ValidationError('User with this phone_number does not '
                                   'exists')
         elif self.status != USER_REGISTERED:
-            raise ValidationError("User does not need confirmation")
+            raise ValidationError('User does not need confirmation')
 
     def validate_registration_request(self):
         self.validate_phone()
@@ -91,7 +91,7 @@ class PhoneCode(Model):
     def validate(self):
         confirm_codes = PhoneCode.objects.filter(user=self.user)
         if confirm_codes.exists():
-            confirm_code = confirm_codes.order_by("-id")[:1:][0]
+            confirm_code = confirm_codes.order_by('-id')[:1:][0]
             time_difference = timezone.now() - confirm_code.query_time
             if self.code != confirm_code.code:
                 raise ValidationError('Incorrect code')

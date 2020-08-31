@@ -12,7 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("type_code", "status")
+        fields = ('type_code', 'status')
 
 
 class MasterSerializer(DynamicFieldsModelSerializer):
@@ -31,7 +31,7 @@ class MasterSerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = MasterAccount
-        exclude = ("user",)
+        exclude = ('user',)
 
     def get_album(self, obj, album_type):
         try:
@@ -56,7 +56,7 @@ class UserMasterSerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = User
-        fields = ("type_code", "status", "master")
+        fields = ('type_code', 'status', 'master')
 
     def get_master_serializer(self, obj):
         serializer = MasterSerializer(obj.masteraccount,
@@ -70,7 +70,7 @@ class UserClientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("type_code", "status", "client_id")
+        fields = ('type_code', 'status', 'client_id')
 
     def get_client_id(self, obj):
         return obj.clientaccount.id

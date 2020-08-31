@@ -17,4 +17,4 @@ class DynamicPhotoSerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = Photo
-        exclude = ("user", "album")
+        exclude = ('user', 'album')

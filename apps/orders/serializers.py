@@ -16,7 +16,7 @@ class ReplySerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = Reply
-        exclude = ("order", "date_modified")
+        exclude = ('order', 'date_modified')
 
     def __init__(self, *args, **kwargs):
         context = kwargs.get('context', {})
@@ -55,12 +55,12 @@ class OrderSerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = Order
         fields = [
-            "id", "city",
-            "master_type", "status",
-            "album_id", "date_created",
-            "request_date_from", "request_date_to",
-            "description", "selection_date",
-            "replies", "replies_count",
+            'id', 'city',
+            'master_type', 'status',
+            'album_id', 'date_created',
+            'request_date_from', 'request_date_to',
+            'description', 'selection_date',
+            'replies', 'replies_count',
         ]
 
     def __init__(self, *args, **kwargs):

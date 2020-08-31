@@ -22,13 +22,13 @@ class FeedBackView(APIView):
         master_id = request.GET.get('master_id')
         master = get_object_or_404(MasterAccount, id=master_id)
         feedbacks = FeedBack.objects.filter(master=master)
-        limit = request.GET.get("limit")
-        offset = request.GET.get("offset")
+        limit = request.GET.get('limit')
+        offset = request.GET.get('offset')
         feedbacks, count = pagination(feedbacks, offset, limit)
         feedbacks = FeedBackSerializer(feedbacks, many=True)
         response_body = {
-            "feedbacks": feedbacks.data,
-            "count": count,
+            'feedbacks': feedbacks.data,
+            'count': count,
         }
         return Response(response_body, status=HTTP_200_OK)
 
@@ -42,7 +42,7 @@ class FeedBackView(APIView):
                         master = get_object_or_404(MasterAccount, id=master_id)
                     except ValueError:
                         return Response(
-                            {"detail": "master_id must be integer."},
+                            {'detail': 'master_id must be integer.'},
                             HTTP_400_BAD_REQUEST)
                     complete_orders = Order.objects.filter(
                         replies__master=master,
@@ -53,27 +53,27 @@ class FeedBackView(APIView):
                         client=user.clientaccount
                     )
                     if complete_orders and not feedbacks:
-                        comment = request.POST.get("comment")
+                        comment = request.POST.get('comment')
                         feedback = FeedBack.objects.create(
-                            nickname=form.cleaned_data["nickname"],
+                            nickname=form.cleaned_data['nickname'],
                             comment=comment,
-                            rating=form.cleaned_data["rating"],
+                            rating=form.cleaned_data['rating'],
                             master=master,
                             client=user.clientaccount
                         )
                         serialized = FeedBackSerializer(feedback)
-                        return Response({"feedback": serialized.data},
+                        return Response({'feedback': serialized.data},
                                         status=HTTP_201_CREATED)
                     else:
                         return Response(status=HTTP_400_BAD_REQUEST)
                 else:
                     return Response(
-                        {"detail": f"Form is not valid: {form.errors}"},
+                        {'detail': f'Form is not valid: {form.errors}'},
                         status=HTTP_400_BAD_REQUEST
                     )
             else:
                 return Response(
-                    {"detail": "Field 'master_id' not found."},
+                    {"detail": 'Field \'master_id\' not found.'},
                     status=HTTP_400_BAD_REQUEST)
         else:
             return Response(status=HTTP_403_FORBIDDEN)
@@ -97,10 +97,10 @@ class NotificationView(APIView):
         replies = replies.order_by('master', 'id').distinct('master')
         masters_with_feedbacks = FeedBack.objects.filter(
                         client=client,
-                        master__in=replies.values_list("master")
-                        ).values_list("master")
+                        master__in=replies.values_list('master')
+                        ).values_list('master')
         replies = replies.exclude(master__in=masters_with_feedbacks)
         serializer = FeedbackNotificationSerializer(replies, many=True)
 
-        return Response({"feedbacks_notification_data": serializer.data},
+        return Response({'feedbacks_notification_data': serializer.data},
                         status=HTTP_200_OK)

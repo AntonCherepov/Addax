@@ -14,4 +14,4 @@ def send_email(recipient_list: list, message: str, title: str):
 @app.task(ignore_result=True)
 def send_phone_mail(recipient_number: str, message: str):
     sms = SMSC()
-    sms.send_sms("7"+recipient_number, message, sender="sms")
+    sms.send_sms('7'+recipient_number, message, sender='sms')

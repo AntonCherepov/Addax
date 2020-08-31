@@ -23,39 +23,39 @@ class OrderUpdateTestCase(APITestCase):
 
         # Create test users
         # Client
-        self.main_client = User.objects.create(phone_number="9000000000",
-                                       username="9000000000",
+        self.main_client = User.objects.create(phone_number='9000000000',
+                                       username='9000000000',
                                        type_code=CLIENT,
                                        status=USER_CONFIRMED)
         ClientAccount(user=self.main_client).create_account()
         self.main_client_token = Token.objects.create(user=self.main_client)
         # Master 1
-        master_1 = User.objects.create(phone_number="9000000001",
-                                       username="9000000001",
+        master_1 = User.objects.create(phone_number='9000000001',
+                                       username='9000000001',
                                        type_code=MASTER,
                                        status=USER_CONFIRMED)
         MasterAccount(user=master_1).create_account()
         self.master_1_token = Token.objects.create(user=master_1)
         # Master 2
-        master_2 = User.objects.create(phone_number="9000000002",
-                                       username="9000000002",
+        master_2 = User.objects.create(phone_number='9000000002',
+                                       username='9000000002',
                                        type_code=MASTER,
                                        status=USER_CONFIRMED)
         MasterAccount(user=master_2).create_account()
         self.master_2_token = Token.objects.create(user=master_2)
 
         # Create test manuals
-        city = City(name="Воронеж")
+        city = City(name='Воронеж')
         city.save()
         MasterType.objects.bulk_create(
-            [MasterType(name="Визажист"),
-             MasterType(name="Косметолог"),
-             MasterType(name="Массажист"),
-             MasterType(name="Мастер по маникюру"),
-             MasterType(name="Мастер по наращиванию ресниц"),
-             MasterType(name="Парикмахер"),
-             MasterType(name="Мастер эпиляции")])
-        default_master_type = MasterType.objects.get(name="Визажист")
+            [MasterType(name='Визажист'),
+             MasterType(name='Косметолог'),
+             MasterType(name='Массажист'),
+             MasterType(name='Мастер по маникюру'),
+             MasterType(name='Мастер по наращиванию ресниц'),
+             MasterType(name='Парикмахер'),
+             MasterType(name='Мастер эпиляции')])
+        default_master_type = MasterType.objects.get(name='Визажист')
 
         # Create test order and order replies
         order_ms = Order(
@@ -90,7 +90,7 @@ class OrderUpdateTestCase(APITestCase):
             suggested_time_from=date_to,
             master=master_1.masteraccount,
             order=order_ms,
-            comment="",
+            comment='',
             status=CONSIDERED
         )
         self.reply_selected = Reply.objects.create(
@@ -100,7 +100,7 @@ class OrderUpdateTestCase(APITestCase):
             suggested_time_from=date_to,
             master=master_2.masteraccount,
             order=order_ms,
-            comment="",
+            comment='',
             status=SELECTED
         )
         self.order_sm_reply_considered = Reply.objects.create(
@@ -110,7 +110,7 @@ class OrderUpdateTestCase(APITestCase):
             suggested_time_from=date_to,
             master=master_2.masteraccount,
             order=order_sm,
-            comment="",
+            comment='',
             status=CONSIDERED
         )
 
@@ -118,7 +118,7 @@ class OrderUpdateTestCase(APITestCase):
         """SubCase 2"""
         order = Order.objects.get(client=self.main_client.clientaccount,
                                   status=MASTER_SELECTED)
-        data = {"status_code": "cm"}
+        data = {'status_code': 'cm'}
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' +
                                               str(self.master_2_token))
@@ -132,7 +132,7 @@ class OrderUpdateTestCase(APITestCase):
         """SubCase 2 security test 1"""
         order = Order.objects.get(client=self.main_client.clientaccount,
                                   status=MASTER_SELECTED)
-        data = {"status_code": "cm"}
+        data = {'status_code': 'cm'}
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' +
                                               str(self.master_1_token))
@@ -150,7 +150,7 @@ class OrderUpdateTestCase(APITestCase):
             client=self.main_client.clientaccount,
             status=MASTER_SELECTED
         )
-        data = {"status_code": "cc"}
+        data = {'status_code': 'cc'}
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' +
                                               str(self.main_client_token))
@@ -168,7 +168,7 @@ class OrderUpdateTestCase(APITestCase):
             client=self.main_client.clientaccount,
             status=SELECTION_OF_MASTERS
         )
-        data = {"status_code": "cc"}
+        data = {'status_code': 'cc'}
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' +
                                               str(self.main_client_token))
@@ -186,8 +186,8 @@ class OrderUpdateTestCase(APITestCase):
             status=SELECTION_OF_MASTERS
         )
         data = {
-            "status_code": "ms",
-            "reply_id": str(self.order_sm_reply_considered.id)
+            'status_code': 'ms',
+            'reply_id': str(self.order_sm_reply_considered.id)
         }
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' +

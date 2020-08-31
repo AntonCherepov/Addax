@@ -13,7 +13,7 @@ class FeedBackSerializer(ModelSerializer):
 
     class Meta:
         model = FeedBack
-        exclude = ("client", "master")
+        exclude = ('client', 'master')
 
 
 class FeedbackNotificationOrderSerializer(ModelSerializer):
@@ -54,7 +54,7 @@ class FeedbackNotificationSerializer(ModelSerializer):
 
     class Meta:
         model = FeedBack
-        fields = ("order", "master")
+        fields = ('order', 'master')
 
     def get_order_data(self, obj):
         serializer = FeedbackNotificationOrderSerializer(obj.order)

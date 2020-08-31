@@ -28,8 +28,8 @@ class Order(Model):
 
     def validate(self):
         if self.request_date_from >= self.request_date_to:
-            raise ValidationError("Field \"request_date_from\" can't be more "
-                                  "or equal than field \"request_date_to\".")
+            raise ValidationError('Field "request_date_from" can\'t be more '
+                                  'or equal than field "request_date_to".')
 
     def create_album(self):
         a = Album(user=self.client.user, type=ORDER)
@@ -47,7 +47,7 @@ class Order(Model):
         try:
             return self.replies.get(id=reply_id)
         except ObjectDoesNotExist:
-            raise ValidationError(f"No reply with {reply_id=} for this order")
+            raise ValidationError(f'No reply with {reply_id=} for this order')
         except ValueError:
             raise ValidationError('Incorrect value for field "reply_id"')
 
@@ -56,7 +56,7 @@ class Reply(Model):
     """Reply by master."""
 
     master = ForeignKey(MasterAccount, on_delete=CASCADE)
-    order = ForeignKey(Order, on_delete=CASCADE, related_name="replies")
+    order = ForeignKey(Order, on_delete=CASCADE, related_name='replies')
     suggested_time_from = DateTimeField()
     suggested_time_to = DateTimeField()
     cost = IntegerField()
@@ -67,11 +67,11 @@ class Reply(Model):
 
     def validate(self):
         if Reply.objects.filter(master=self.master, order=self.order).exists():
-            raise ValidationError("Reply already exists.")
+            raise ValidationError('Reply already exists.')
         if self.suggested_time_from >= self.suggested_time_to:
-            raise ValidationError("Field \"suggested_time_from\" can't be more"
-                                  "or equal than field "
-                                  "\"suggested_time_from\".")
+            raise ValidationError('Field \"suggested_time_from\" can\'t '
+                                  'be more or equal than field '
+                                  '"suggested_time_from".')
         if self.comment:
             if len(self.comment) > 1000:
-                raise ValidationError("Field \"comment\" is too long.")
+                raise ValidationError('Field "comment" is too long.')

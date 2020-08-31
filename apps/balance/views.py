@@ -12,5 +12,5 @@ class GetMasterBalance(APIView):
 
     @get_user_decorator
     def get(self, request, user):
-        return Response({"balance": user.balance.current_value},
+        return Response({'balance': user.balance.current_value},
                         status=HTTP_200_OK)

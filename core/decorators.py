@@ -12,7 +12,7 @@ def get_user_decorator(func):
                 user = utils.get_user(request)
                 return func(obj, request, user, *args, **kwargs)
             except RequestUserError as e:
-                return Response({"detail": str(e)},
+                return Response({'detail': str(e)},
                                 status=HTTP_401_UNAUTHORIZED)
         return Response(status=HTTP_401_UNAUTHORIZED)
     return wrapper

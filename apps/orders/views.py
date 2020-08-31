@@ -72,29 +72,29 @@ class OrderView(APIView):
                 order.album.is_closed = True
                 order.album.save()
             except ValidationError as e:
-                return Response({"detail": extract_exception_text(e)},
+                return Response({'detail': extract_exception_text(e)},
                                 status=HTTP_400_BAD_REQUEST)
             order = OrderSerializer(order)
-            return Response({"order": order.data}, status=HTTP_201_CREATED)
+            return Response({'order': order.data}, status=HTTP_201_CREATED)
         else:
             return Response(
-                {"detail": f"Form is not valid: {order_form.errors}"},
+                {'detail': f'Form is not valid: {order_form.errors}'},
                 status=HTTP_400_BAD_REQUEST
             )
 
     @get_user_decorator
     def get(self, request, user):
-        """
+        '''
         Returns (filtered) JSON-serialized orders with selected fields.
         A set of fields may contain nested replies objects. Available
         order objects and set of fields depends on user permissions.
-        """
+        '''
 
         order_exclude_fields = set()
         master_exclude_fields = {'status'}
-        limit = request.GET.get("limit")
-        offset = request.GET.get("offset")
-        order_status = request.GET.get("order_status")
+        limit = request.GET.get('limit')
+        offset = request.GET.get('offset')
+        order_status = request.GET.get('order_status')
 
         # Extract all possible order objects for the current user
         orders, master = get_orders_and_master_for_user(
@@ -116,8 +116,8 @@ class OrderView(APIView):
         except (ValueError, OSError):
             return Response(status=HTTP_400_BAD_REQUEST)
         except AssertionError as e:
-            if str(e) == "Negative indexing is not supported.":
-                return Response({"detail": extract_exception_text(e)},
+            if str(e) == 'Negative indexing is not supported.':
+                return Response({'detail': extract_exception_text(e)},
                                 status=HTTP_400_BAD_REQUEST)
         orders = OrderSerializer(
             orders,
@@ -130,7 +130,7 @@ class OrderView(APIView):
              },
                                  )
         try:
-            return Response({"orders": orders.data, "count": orders_count},
+            return Response({'orders': orders.data, 'count': orders_count},
                             status=HTTP_200_OK)
         except IntegrityError:
             return Response(status=HTTP_400_BAD_REQUEST)
@@ -148,10 +148,10 @@ class OrderByIdView(APIView):
             selected_master = order.replies.get(status=SELECTED).master
         except ObjectDoesNotExist:
             selected_master = None
-        order_exclude_fields = {"replies_count"}
-        status_code = request.POST.get("status_code")
-        selection_date = request.POST.get("selection_date")
-        reply_id = request.POST.get("reply_id")
+        order_exclude_fields = {'replies_count'}
+        status_code = request.POST.get('status_code')
+        selection_date = request.POST.get('selection_date')
+        reply_id = request.POST.get('reply_id')
         try:
             if status_code:
                 if user.is_client() and order.client == user.clientaccount:
@@ -169,9 +169,9 @@ class OrderByIdView(APIView):
                                            MASTER_SELECTED]):
                         order.status = CANCELED_BY_CLIENT
                     else:
-                        return Response({"detail": "This client does not have "
-                                                   "the ability to complete "
-                                                   "this action."},
+                        return Response({'detail': 'This client does not have '
+                                                   'the ability to complete '
+                                                   'this action.'},
                                         status=HTTP_400_BAD_REQUEST)
                 elif (user.is_master() and
                       user.masteraccount == selected_master):
@@ -195,13 +195,13 @@ class OrderByIdView(APIView):
                         return Response(status=HTTP_403_FORBIDDEN)
                 order.update_selection_date(selection_date)
         except ValidationError as e:
-            return Response({"detail": extract_exception_text(e)},
+            return Response({'detail': extract_exception_text(e)},
                             status=HTTP_400_BAD_REQUEST)
         order.save()
         serialized_order = OrderSerializer(order, context={
-            "order_exclude_fields": order_exclude_fields
+            'order_exclude_fields': order_exclude_fields
         })
-        return Response({"order": serialized_order.data}, status=HTTP_200_OK)
+        return Response({'order': serialized_order.data}, status=HTTP_200_OK)
 
     @get_user_decorator
     def get(self, request, user, order_id):
@@ -215,7 +215,7 @@ class OrderByIdView(APIView):
                 order_id=order_id
             )
         except ValidationError as e:
-            return Response({"detail": extract_exception_text(e)},
+            return Response({'detail': extract_exception_text(e)},
                             status=HTTP_400_BAD_REQUEST)
         order = OrderSerializer(
             order,
@@ -227,7 +227,7 @@ class OrderByIdView(APIView):
             },
         )
 
-        return Response({"order": order.data}, status=HTTP_200_OK)
+        return Response({'order': order.data}, status=HTTP_200_OK)
 
 
 class RepliesView(APIView):
@@ -263,14 +263,14 @@ class RepliesView(APIView):
                 )
                 reply.validate()
             except ValidationError as e:
-                return Response({"detail": extract_exception_text(e)},
+                return Response({'detail': extract_exception_text(e)},
                                 status=HTTP_400_BAD_REQUEST)
             reply.save()
             reply = ReplySerializer(reply)
-            return Response({"reply": reply.data}, status=HTTP_201_CREATED)
+            return Response({'reply': reply.data}, status=HTTP_201_CREATED)
         else:
             return Response(
-                {"detail": f"Form is not valid: {reply_form.errors}"},
+                {'detail': f'Form is not valid: {reply_form.errors}'},
                 status=HTTP_400_BAD_REQUEST
             )
 
@@ -285,7 +285,7 @@ class RepliesView(APIView):
                 order_id=order_id
             )
         except ValidationError as e:
-            return Response({"detail": extract_exception_text(e)},
+            return Response({'detail': extract_exception_text(e)},
                             status=HTTP_400_BAD_REQUEST)
         if user.is_master():
             replies = order.replies.filter(master=master)
@@ -300,7 +300,7 @@ class RepliesView(APIView):
             },
         )
         context = {
-            "order_id": order.id,
-            "replies": replies.data,
+            'order_id': order.id,
+            'replies': replies.data,
                    }
         return Response(context, status=HTTP_200_OK)
