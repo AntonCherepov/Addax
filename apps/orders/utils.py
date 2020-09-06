@@ -1,3 +1,4 @@
+from datetime import timedelta
 from distutils.util import strtobool
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -9,6 +10,7 @@ from core.tasks import send_email
 from orders.constants import CANCELED_BY_CLIENT, CANCELED_BY_MASTER, SELECTED, \
     MASTER_SELECTED
 from orders.models import Order, Reply
+from orders.tasks import send_email_order_start
 
 
 def order_by_id(order_id=None):
@@ -109,4 +111,15 @@ def send_order_status_notification(order):
             f'Вас выбрали в заявке №{order.id}.',
             title
         )
+        if order.selection_date:
+            mail_dt = order.selection_date - timedelta(hours=4)
+            send_email_order_start.apply_async(
+                (
+                    [order.client.user.email],
+                    'У вас назначен мастер через 4 часа',
+                    'Предстоящая услуга',
+                    order.status
+                ),
+                eta=mail_dt
+            )
 
