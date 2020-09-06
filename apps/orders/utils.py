@@ -5,6 +5,9 @@ from django.db.models import Q
 from rest_framework.generics import get_object_or_404
 
 from balance.constants import OPERATION_ORDER_COMPLETE
+from core.tasks import send_email
+from orders.constants import CANCELED_BY_CLIENT, CANCELED_BY_MASTER, SELECTED, \
+    MASTER_SELECTED
 from orders.models import Order, Reply
 
 
@@ -82,3 +85,28 @@ def change_balance_on_complete_order(order, user):
     difference_value = int(-reply.cost / 10)
     user.balance.change_value(difference_value,
                               OPERATION_ORDER_COMPLETE)
+
+
+def send_order_status_notification(order):
+    title = f'У заявки №{order.id} изменен статус'
+    if order.status == CANCELED_BY_CLIENT:
+        reply = order.replies.get(status=SELECTED)
+        send_email.delay(
+            [reply.master.user.email],
+            f'Заявка №{order.id} отменена клиентом.',
+            title
+        )
+    elif order.status == CANCELED_BY_MASTER:
+        send_email.delay(
+            [order.client.user.email],
+            f'Заявка  №{order.id} отменена мастером.',
+            title
+        )
+    elif order.status == MASTER_SELECTED:
+        reply = order.replies.get(status=SELECTED)
+        send_email.delay(
+            [reply.master.user.email],
+            f'Вас выбрали в заявке №{order.id}.',
+            title
+        )
+

@@ -20,7 +20,8 @@ from users.models import MasterAccount
 from orders.models import Order, Reply
 from orders.utils import (order_by_id, get_orders_and_master_for_user,
                           get_order_by_id_and_master_for_user,
-                          change_balance_on_complete_order)
+                          change_balance_on_complete_order,
+                          send_order_status_notification)
 from orders.constants import (SUCCESSFULLY_COMPLETED, SELECTION_OF_MASTERS,
                               MASTER_SELECTED, CANCELED_BY_CLIENT,
                               CANCELED_BY_MASTER, CLIENT_DID_NOT_ARRIVE,
@@ -198,6 +199,8 @@ class OrderByIdView(APIView):
             return Response({'detail': extract_exception_text(e)},
                             status=HTTP_400_BAD_REQUEST)
         order.save()
+        if status_code:
+            send_order_status_notification(order)
         serialized_order = OrderSerializer(order, context={
             'order_exclude_fields': order_exclude_fields
         })
