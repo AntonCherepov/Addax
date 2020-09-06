@@ -22,7 +22,7 @@ DEFAULT_FIELDS = {
     'MasterAccount': {
         'id', 'types', 'status',
         'gallery_album_id', 'workplace_album_id', 'about_myself',
-        'name', 'address',
+        'name', 'address', 'feedbacks_information'
     },
     'Order': {
         'id', 'city', 'master_type',

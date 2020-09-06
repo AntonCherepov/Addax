@@ -22,7 +22,8 @@ from users.models import User, PhoneCode, MasterAccount, ClientAccount
 from users.utils import get_token
 from users.forms import RegistrationForm, ConfirmationForm
 from users.serializers import (UserSerializer, MasterSerializer,
-                               UserMasterSerializer, UserClientSerializer)
+                               UserMasterSerializer, UserClientSerializer,
+                               MasterAccountOwnerSerializer)
 
 
 class RegistrationView(APIView):
@@ -133,35 +134,33 @@ class MastersView(APIView):
     @get_user_decorator
     def get(self, request, user, master_id):
         master = get_object_or_404(MasterAccount, id=master_id)
-        master_exclude_fields = {'status'}
-        if user.type_code == MASTER:
-            if user.masteraccount.id == master_id:
-                master_exclude_fields.remove('status')
-        serializer = MasterSerializer(
-            master,
-            context={'request': request,
-                     'user': user,
-                     'master_id': master_id,
-                     'master_exclude_fields': master_exclude_fields},
-        )
+        if user.type_code == MASTER and user.masteraccount.id == master_id:
+            serializer = MasterAccountOwnerSerializer(master)
+        else:
+            master_exclude_fields = {'status'}
+            serializer = MasterSerializer(
+                master,
+                context={'request': request,
+                         'user': user,
+                         'master_id': master_id,
+                         'master_exclude_fields': master_exclude_fields},
+            )
         return Response(serializer.data, status=HTTP_200_OK)
 
     @get_user_decorator
     def patch(self, request, user, master_id):
         if user.is_master() and user.masteraccount.id == master_id:
             master = get_object_or_404(MasterAccount, id=master_id)
-            name = request.POST.get('name')
-            address = request.POST.get('address')
-            about_myself = request.POST.get('about_myself')
-            master_types = request.POST.get('master_types')
             try:
-                if name:
+                if email := request.POST.get('email'):
+                    master.user.email = email
+                if name := request.POST.get('name'):
                     master.name = name
-                if address:
+                if address := request.POST.get('address'):
                     master.address = address
-                if about_myself:
+                if about_myself := request.POST.get('about_myself'):
                     master.about_myself = about_myself
-                if master_types:
+                if master_types := request.POST.get('master_types'):
                     master_types = set(json.loads(master_types))
                     master_types = [
                         MasterType.objects.get(id=int(t))
@@ -173,12 +172,13 @@ class MastersView(APIView):
                     master.types.add(*master_types)
                 else:
                     master.save()
+                master.user.save()
             except (ObjectDoesNotExist, DataError, ValueError) as e:
                 return Response({'detail': str(e)},
                                 status=HTTP_400_BAD_REQUEST)
         else:
             return Response(status=HTTP_403_FORBIDDEN)
-        serializer = MasterSerializer(master)
+        serializer = MasterAccountOwnerSerializer(master)
         return Response({'master': serializer.data}, status=HTTP_200_OK)
 
 
