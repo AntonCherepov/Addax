@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.utils.datetime_safe import datetime as dt
@@ -15,6 +17,8 @@ from core.utils import pagination, string_to_set, extract_exception_text
 from manuals.models import MasterType, City
 from orders.forms import OrderForm, ReplyForm
 from orders.serializers import OrderSerializer, ReplySerializer
+from orders.tasks import send_new_order_notification, \
+    send_new_replies_notification
 from users.permissions import IsConfirmed, MasterReadOnly, IsBalancePositive
 from users.models import MasterAccount
 from orders.models import Order, Reply
@@ -75,6 +79,9 @@ class OrderView(APIView):
             except ValidationError as e:
                 return Response({'detail': extract_exception_text(e)},
                                 status=HTTP_400_BAD_REQUEST)
+            mail_dt = order.date_created + timedelta(minutes=40)
+            send_new_order_notification.apply_async((order.id,), eta=mail_dt)
+            send_new_replies_notification.apply_async((order.id,), eta=mail_dt)
             order = OrderSerializer(order)
             return Response({'order': order.data}, status=HTTP_201_CREATED)
         else:
