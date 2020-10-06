@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import (CharField, Model, CASCADE,
                               IntegerField, DateTimeField, ForeignKey,
-                              OneToOneField, ManyToManyField,)
+                              OneToOneField, ManyToManyField, BooleanField, )
 
 from config.constants import AVATAR, MASTER_WORKPLACE, MASTER_GALLERY
 from core.utils import get_possible_choice_values
@@ -128,6 +128,7 @@ class MasterAccount(Model):
                 ]
             )
             Balance.objects.create(user=self.user, current_value=0)
+            MasterSettings.objects.create(master=self.user.masteraccount)
             p.save()
 
 
@@ -141,3 +142,26 @@ class ClientAccount(Model):
         if not ClientAccount.objects.filter(user=self.user).exists():
             p = ClientAccount(user=self.user)
             p.save()
+            ClientSettings.objects.create(client=self.user.clientaccount)
+
+
+class ClientSettings(Model):
+
+    client = OneToOneField(ClientAccount, on_delete=CASCADE)
+    # email notifications
+    upcoming_order_email = BooleanField(default=False)
+    new_replies_email = BooleanField(default=False)
+    cancel_order_email = BooleanField(default=False)
+    # sms notifications
+    upcoming_order_sms = BooleanField(default=False)
+    new_replies_sms = BooleanField(default=False)
+    cancel_order_sms = BooleanField(default=False)
+
+
+class MasterSettings(Model):
+
+    master = OneToOneField(MasterAccount, on_delete=CASCADE)
+    # email notifications
+    you_chosen_email = BooleanField(default=False)
+    new_order_email = BooleanField(default=False)
+    cancel_order_email = BooleanField(default=False)

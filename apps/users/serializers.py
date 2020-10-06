@@ -6,7 +6,7 @@ from rest_framework.fields import SerializerMethodField
 from albums.models import Album
 from config.constants import AVATAR, MASTER_GALLERY, MASTER_WORKPLACE
 from core.serializers import DynamicFieldsModelSerializer
-from users.models import User, MasterAccount
+from users.models import User, MasterAccount, MasterSettings, ClientSettings
 
 
 class BaseMasterSerializer(serializers.ModelSerializer):
@@ -110,3 +110,17 @@ class MasterAccountOwnerSerializer(BaseMasterSerializer):
 
     def get_email(self, obj):
         return obj.user.email
+
+
+class MasterSettingsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MasterSettings
+        exclude = ('id', 'master')
+
+
+class ClientSettingsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ClientSettings
+        exclude = ('id', 'client')

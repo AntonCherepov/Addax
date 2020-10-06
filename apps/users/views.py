@@ -17,13 +17,16 @@ from core.exceptions import RequestUserError
 from core.utils import extract_exception_text
 from users.constants import MASTER, CLIENT, USER_CONFIRMED, USER_REGISTERED
 from manuals.models import MasterType
-from users.permissions import IsConfirmed, IsNotBanned
-from users.models import User, PhoneCode, MasterAccount, ClientAccount
+from users.permissions import IsConfirmed, IsNotBanned, IsClient, IsMaster
+from users.models import User, PhoneCode, MasterAccount, ClientAccount, \
+    MasterSettings, ClientSettings
 from users.utils import get_token
 from users.forms import RegistrationForm, ConfirmationForm
 from users.serializers import (UserSerializer, MasterSerializer,
                                UserMasterSerializer, UserClientSerializer,
-                               MasterAccountOwnerSerializer)
+                               MasterAccountOwnerSerializer,
+                               ClientSettingsSerializer,
+                               MasterSettingsSerializer)
 
 
 class RegistrationView(APIView):
@@ -192,3 +195,50 @@ class ClientsView(APIView):
         content = {'message': 'User is authorized',
                    'user': serialized_user.data}
         return Response(content)
+
+
+class ClientSettingsView(APIView):
+    permission_classes = (IsAuthenticated, IsClient)
+
+    @get_user_decorator
+    def get(self, request, user, client_id):
+        serializer = ClientSettingsSerializer(user.clientsettings)
+        content = {'settings': serializer.data}
+        return Response(content)
+
+    @get_user_decorator
+    def patch(self, request, user, client_id):
+        serializer = ClientSettingsSerializer(request.POST)
+        if serializer.is_valid():
+            client = user.clientaccount
+            client_settings = ClientSettings.objects.filter(client=client)
+            client_settings.update(**serializer.validated_data)
+            return Response({'settings': serializer.data}, status=HTTP_200_OK)
+        else:
+            return Response({'detail': f'Request is not valid: '
+                                       f'{serializer.errors}'},
+                            status=HTTP_400_BAD_REQUEST)
+
+
+class MasterSettingsView(APIView):
+    permission_classes = (IsAuthenticated, IsMaster)
+
+    @get_user_decorator
+    def get(self, request, user, master_id):
+        master_settings = user.masteraccount.mastersettings
+        serializer = MasterSettingsSerializer(master_settings)
+        content = {'settings': serializer.data}
+        return Response(content)
+
+    @get_user_decorator
+    def patch(self, request, user, master_id):
+        serializer = MasterSettingsSerializer(data=request.POST)
+        if serializer.is_valid():
+            master = user.masteraccount
+            master_settings = MasterSettings.objects.filter(master=master)
+            master_settings.update(**serializer.validated_data)
+            return Response({'settings': serializer.data}, status=HTTP_200_OK)
+        else:
+            return Response({'detail': f'Request is not valid: '
+                                       f'{serializer.errors}'},
+                            status=HTTP_400_BAD_REQUEST)
