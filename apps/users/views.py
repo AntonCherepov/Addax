@@ -238,3 +238,17 @@ class MasterSettingsView(APIView):
             return Response({'detail': f'Request is not valid: '
                                        f'{serializer.errors}'},
                             status=HTTP_400_BAD_REQUEST)
+
+
+class LogoutAll(APIView):
+
+    permission_classes = (IsAuthenticated, )
+
+    @get_user_decorator
+    def delete(self, request, user):
+        try:
+            all_user_tokens = MultiToken.objects.filter(user=user)
+            all_user_tokens.delete()
+            return Response(status=HTTP_200_OK)
+        except RequestUserError as e:
+            return Response({'detail': str(e)}, status=HTTP_400_BAD_REQUEST)
