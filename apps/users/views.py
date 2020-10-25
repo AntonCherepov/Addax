@@ -9,7 +9,6 @@ from rest_framework.response import Response
 from rest_framework.status import (HTTP_200_OK, HTTP_400_BAD_REQUEST,
                                    HTTP_403_FORBIDDEN)
 from rest_framework.views import APIView
-from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 
 from core.decorators import get_user_decorator
@@ -19,7 +18,7 @@ from users.constants import MASTER, CLIENT, USER_CONFIRMED, USER_REGISTERED
 from manuals.models import MasterType
 from users.permissions import IsConfirmed, IsNotBanned, IsClient, IsMaster
 from users.models import User, PhoneCode, MasterAccount, ClientAccount, \
-    MasterSettings, ClientSettings
+    MasterSettings, ClientSettings, MultiToken
 from users.utils import get_token
 from users.forms import RegistrationForm, ConfirmationForm
 from users.serializers import (UserSerializer, MasterSerializer,
@@ -81,10 +80,7 @@ class ConfirmationView(APIView):
                     MasterAccount(user=user).create_account()
                 elif user.type_code == CLIENT:
                     ClientAccount(user=user).create_account()
-                try:
-                    token = Token.objects.get(user=user)
-                except ObjectDoesNotExist:
-                    token = Token.objects.create(user=user)
+                token = MultiToken.objects.create(user=user)
                 content = {'token': token.key}
                 return Response(content, status=HTTP_200_OK)
 

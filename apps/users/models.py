@@ -1,11 +1,17 @@
+from random import SystemRandom
+from string import ascii_letters, digits
+
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import (CharField, Model, CASCADE,
                               IntegerField, DateTimeField, ForeignKey,
                               OneToOneField, ManyToManyField, BooleanField, )
+from rest_framework.authtoken.models import Token
+
 
 from config.constants import AVATAR, MASTER_WORKPLACE, MASTER_GALLERY
+from config.settings import AUTH_USER_MODEL
 from core.utils import get_possible_choice_values
 from users.constants import (USER_TYPE_CHOICES, USER_STATUS_CHOICES,
                              USER_REGISTERED, USER_BANNED,
@@ -66,8 +72,6 @@ class User(AbstractUser):
         elif not users.exists():
             raise ValidationError('User with this phone_number does not '
                                   'exists')
-        elif self.status != USER_REGISTERED:
-            raise ValidationError('User does not need confirmation')
 
     def validate_registration_request(self):
         self.validate_phone()
@@ -128,8 +132,8 @@ class MasterAccount(Model):
                 ]
             )
             Balance.objects.create(user=self.user, current_value=0)
-            MasterSettings.objects.create(master=self.user.masteraccount)
             p.save()
+            MasterSettings.objects.create(master=self.user.masteraccount)
 
 
 class ClientAccount(Model):
@@ -165,3 +169,25 @@ class MasterSettings(Model):
     you_chosen_email = BooleanField(default=False)
     new_order_email = BooleanField(default=False)
     cancel_order_email = BooleanField(default=False)
+
+
+class MultiToken(Token):
+    key = CharField(max_length=40, db_index=True, unique=True)
+    user = ForeignKey(
+        AUTH_USER_MODEL, related_name='auth_tokens',
+        on_delete=CASCADE
+    )
+    name = CharField(max_length=64)
+
+    class Meta:
+        unique_together = (('user', 'name'),)
+
+    def generate_random_name(self):
+        self.name = ''.join(
+            SystemRandom().choice(ascii_letters + digits)
+            for _ in range(64)
+                            )
+
+    def save(self, *args, **kwargs):
+        self.generate_random_name()
+        super().save(*args, **kwargs)

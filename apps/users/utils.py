@@ -1,14 +1,13 @@
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework.authtoken.models import Token
 
 from core.exceptions import RequestUserError
-from users.models import User
+from users.models import User, MultiToken
 
 
-def get_token(request) -> Token:
+def get_token(request) -> MultiToken:
     try:
         token_raw = request.META['HTTP_AUTHORIZATION'].split(' ')[1]
-        token = Token.objects.get(key=token_raw)
+        token = MultiToken.objects.get(key=token_raw)
     except ObjectDoesNotExist:
         raise RequestUserError('Token does not exist.')
     except KeyError:
