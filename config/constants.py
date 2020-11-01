@@ -40,9 +40,13 @@ DEFAULT_EXCLUDE_FIELDS = {
     'MasterAccount': {
     },
     'Order': {
-        'replies'
+        'replies', 'photos'
     },
     'Reply': {
         'master'
+    },
+    'Photo': {
+        'image',
+        'date_created'
     }
 }

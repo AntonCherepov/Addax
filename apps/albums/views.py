@@ -22,7 +22,7 @@ class AlbumView(APIView):
         count = photos.count()
         limit = request.GET.get('limit')
         offset = request.GET.get('offset')
-        fields = request.GET.get('fields')
+        fields = request.GET.get('photos_fields')
         exclude_fields = {'date_created'}
         try:
             if offset:
@@ -34,10 +34,14 @@ class AlbumView(APIView):
             else:
                 photos = photos[:25:]
             if fields:
-                photos = DynamicPhotoSerializer(photos,
-                                                many=True,
-                                                fields=fields,
-                                                exclude_fields=exclude_fields)
+                photos = DynamicPhotoSerializer(
+                    photos,
+                    many=True,
+                    context={
+                        'request': request,
+                        'photos_exclude_fields': exclude_fields,
+                    },
+                )
             else:
                 photos = PhotoSerializer(photos, many=True)
         except (ValueError, OSError, TypeError) as e:
