@@ -1,5 +1,6 @@
 from rest_framework.fields import SerializerMethodField
 
+from albums.serializers import DynamicPhotoSerializer
 from core.serializers import DynamicFieldsModelSerializer
 from core.utils import get_status_name
 from orders.constants import ORDER_STATUS_CHOICES, REPLY_STATUS_CHOICES
@@ -51,6 +52,7 @@ class OrderSerializer(DynamicFieldsModelSerializer):
     album_id = SerializerMethodField('get_album_id')
     replies = SerializerMethodField('get_replies_serializer')
     replies_count = SerializerMethodField('get_replies_count')
+    photos = SerializerMethodField('get_album_photos')
 
     class Meta:
         model = Order
@@ -60,7 +62,7 @@ class OrderSerializer(DynamicFieldsModelSerializer):
             'album_id', 'date_created',
             'request_date_from', 'request_date_to',
             'description', 'selection_date',
-            'replies', 'replies_count',
+            'replies', 'replies_count', 'photos'
         ]
 
     def __init__(self, *args, **kwargs):
@@ -98,3 +100,9 @@ class OrderSerializer(DynamicFieldsModelSerializer):
 
     def get_album_id(self, obj):
         return obj.album.id
+
+    def get_album_photos(self, obj):
+        serializer = DynamicPhotoSerializer(obj.album.photo_set.all(),
+                                            many=True,
+                                            context=self.context)
+        return serializer.data
