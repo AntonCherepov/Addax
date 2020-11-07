@@ -56,7 +56,7 @@ class RegistrationView(APIView):
                                     status=HTTP_400_BAD_REQUEST)
             c = PhoneCode(user=user, code=random_code)
             c.save()
-            return Response(status=HTTP_200_OK)
+            return Response({"code": random_code}, status=HTTP_200_OK)
         else:
             return Response({'detail': f'Form is not valid: '
                                        f'{registration_form.errors}'},
