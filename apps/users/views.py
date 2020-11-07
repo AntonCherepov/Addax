@@ -11,10 +11,12 @@ from rest_framework.status import (HTTP_200_OK, HTTP_400_BAD_REQUEST,
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
+from config.constants import AVATAR, MASTER_WORKPLACE, MASTER_GALLERY
 from core.decorators import get_user_decorator
 from core.exceptions import RequestUserError
 from core.utils import extract_exception_text
-from users.constants import MASTER, CLIENT, USER_CONFIRMED, USER_REGISTERED
+from users.constants import MASTER, CLIENT, USER_CONFIRMED, USER_REGISTERED, \
+    MASTER_VERIFIED
 from manuals.models import MasterType
 from users.permissions import IsConfirmed, IsNotBanned, IsClient, IsMaster
 from users.models import User, PhoneCode, MasterAccount, ClientAccount, \
@@ -252,3 +254,29 @@ class LogoutAll(APIView):
             return Response(status=HTTP_200_OK)
         except RequestUserError as e:
             return Response({'detail': str(e)}, status=HTTP_400_BAD_REQUEST)
+
+
+class MasterVerificationView(APIView):
+    permission_classes = (IsAuthenticated, IsMaster,)
+
+    @get_user_decorator
+    def post(self, request, user, master_id):
+        master = user.masteraccount
+        if master.status == MASTER_VERIFIED:
+            response_data = {'detail': 'Master already verified'}
+            return Response(response_data, HTTP_400_BAD_REQUEST)
+        master_album_types = (AVATAR, MASTER_WORKPLACE, MASTER_GALLERY)
+        master_albums = user.album_set.filter(type__in=master_album_types)
+        # In all master albums must be at least one photo
+        photos_count = [album.photo_set.count() for album in master_albums]
+        validation_params = [master.types.all(), master.about_myself,
+                             master.name] + photos_count
+
+        if all(validation_params):
+            master.status = MASTER_VERIFIED
+            master.save()
+            return Response(status=HTTP_200_OK)
+        else:
+            response_data = {'detail': 'All conditions for the confirmation '
+                                       'of the master are not met.'}
+            return Response(response_data, status=HTTP_403_FORBIDDEN)
